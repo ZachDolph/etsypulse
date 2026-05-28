@@ -1,0 +1,30 @@
+# Virtual environment
+.venv/
+
+# Environment variables — NEVER commit real keys
+.env
+
+# Python artifacts
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+*.so
+
+# VSCode settings
+.vscode/
+
+# OS artifacts
+.DS_Store
+Thumbs.db
+
+# Test artifacts
+.pytest_cache/
+htmlcov/
+.coverage
+
+# Local VSCode settings
+.vscode/
+
