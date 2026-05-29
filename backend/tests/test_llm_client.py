@@ -142,3 +142,44 @@ def test_provider_order_uses_openrouter_fallback(monkeypatch) -> None:
 def test_missing_provider_config_fails_fast() -> None:
     with pytest.raises(LLMConfigurationError):
         LLMClient()
+
+from app.services.llm_client import LLMProviderError, LLMRateLimitError, LLMTimeoutError, LLMMalformedResponseError
+
+
+def test_llm_live_errors_are_classified(monkeypatch) -> None:
+    monkeypatch.setenv("NVIDIA_NIM_API_KEY", "nim-key")
+    monkeypatch.setenv("NVIDIA_NIM_MODEL", "nvidia/test-model")
+    monkeypatch.setenv("LLM_RATE_LIMIT_PER_MINUTE", "100000")
+    get_settings.cache_clear()
+
+    def timeout_post(*args, **kwargs):
+        raise httpx.TimeoutException("too slow")
+
+    monkeypatch.setattr(httpx, "post", timeout_post)
+    client = LLMClient()
+    with pytest.raises(LLMProviderError) as timeout_error:
+        client.chat_completion([{"role": "user", "content": "hello"}])
+    assert isinstance(timeout_error.value.__cause__, LLMTimeoutError)
+    assert client.debug_events[0].error_class == "LLMTimeoutError"
+
+    request = httpx.Request("POST", "https://example.test")
+
+    def rate_limit_post(*args, **kwargs):
+        return httpx.Response(429, request=request, json={"error": "rate limited"})
+
+    monkeypatch.setattr(httpx, "post", rate_limit_post)
+    client = LLMClient()
+    with pytest.raises(LLMProviderError) as rate_error:
+        client.chat_completion([{"role": "user", "content": "hello"}])
+    assert isinstance(rate_error.value.__cause__, LLMRateLimitError)
+    assert client.debug_events[0].error_class == "LLMRateLimitError"
+
+    def malformed_post(*args, **kwargs):
+        return httpx.Response(200, request=request, json={"unexpected": []})
+
+    monkeypatch.setattr(httpx, "post", malformed_post)
+    client = LLMClient()
+    with pytest.raises(LLMProviderError) as malformed_error:
+        client.chat_completion([{"role": "user", "content": "hello"}])
+    assert isinstance(malformed_error.value.__cause__, LLMMalformedResponseError)
+    assert client.debug_events[0].error_class == "LLMMalformedResponseError"

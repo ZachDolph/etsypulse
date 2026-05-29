@@ -24,7 +24,7 @@ from app.store import EtsyPulseStore
 
 
 class PipelineRunner:
-    def __init__(self, store: EtsyPulseStore, brightdata: BrightDataClient, llm_client: LLMClient | None = None) -> None:
+    def __init__(self, store: EtsyPulseStore, brightdata: BrightDataClient, llm_client: LLMClient | None = None, judge_threshold: float = 0.7) -> None:
         self.store = store
         self.brightdata = brightdata
         self.llm_client = llm_client
@@ -33,7 +33,7 @@ class PipelineRunner:
         self.competitor_watch = CompetitorWatchAgent(brightdata)
         self.trend_scout = TrendScoutAgent(brightdata)
         self.market_pulse = MarketPulseAgent()
-        self.judge = JudgeAgent(llm_client)
+        self.judge = JudgeAgent(llm_client, brief_threshold=judge_threshold)
         self.brief_delivery = BriefDeliveryAgent()
 
     def run_demo(self, pipeline_input: PipelineRunInput) -> PipelineRunOutput:

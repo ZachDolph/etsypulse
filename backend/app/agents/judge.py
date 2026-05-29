@@ -15,8 +15,9 @@ class JudgeLLMShape(BaseModel):
 class JudgeAgent(BaseAgent[JudgeInput, JudgeOutput]):
     name = "Judge Agent"
 
-    def __init__(self, llm_client: LLMClient | None = None) -> None:
+    def __init__(self, llm_client: LLMClient | None = None, brief_threshold: float = 0.7) -> None:
         self.llm_client = llm_client
+        self.brief_threshold = brief_threshold
 
     def run(self, agent_input: JudgeInput) -> JudgeOutput:
         scores: list[JudgeScore] = []
@@ -53,7 +54,7 @@ class JudgeAgent(BaseAgent[JudgeInput, JudgeOutput]):
                     business_impact=business_impact,
                     evidence_quality=evidence_quality,
                     total_score=total,
-                    decision="brief" if total >= 0.7 else "watch",
+                    decision="brief" if total >= self.brief_threshold else "watch",
                     rationale=rationale,
                 )
             )

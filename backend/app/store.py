@@ -65,8 +65,14 @@ class EtsyPulseStore:
         shop = self.bootstrap_shop(DEFAULT_SHOP_URL) if shop_id is None else self.get_shop(shop_id)
         brightdata = BrightDataClient(demo_mode=True, debug_sink=self.record_debug_event)
         llm_client = LLMClient(debug_sink=self.record_debug_event, force_test_mode=True)
-        pipeline = PipelineRunner(store=self, brightdata=brightdata, llm_client=llm_client)
+        from app.config import get_settings
+
+        pipeline = PipelineRunner(store=self, brightdata=brightdata, llm_client=llm_client, judge_threshold=get_settings().judge_brief_threshold)
         return pipeline.run_demo(PipelineRunInput(shop_url=shop.shop_url)).run
+
+    def latest_run_for_shop(self, shop_id: str) -> AgentRun | None:
+        record = self.session.scalars(select(RunRecord).where(RunRecord.shop_id == shop_id).order_by(RunRecord.created_at.desc())).first()
+        return AgentRun.model_validate(record.run) if record else None
 
     def get_run(self, run_id: str) -> AgentRun:
         record = self.session.get(RunRecord, run_id)

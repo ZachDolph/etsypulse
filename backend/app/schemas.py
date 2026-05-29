@@ -10,6 +10,8 @@ T = TypeVar("T")
 Decision = Literal["ignore", "watch", "brief"]
 Severity = Literal["low", "medium", "high"]
 RunStatus = Literal["queued", "running", "completed", "failed"]
+SchedulerCheckType = Literal["keyword", "competitor", "trend", "all"]
+SchedulerTriggerStatus = Literal["completed", "duplicate_suppressed"]
 
 
 def utc_now() -> datetime:
@@ -187,6 +189,49 @@ class BootstrapRequest(BaseModel):
 
 class StartDemoRunRequest(BaseModel):
     shop_id: str | None = None
+
+
+class SchedulerTriggerRequest(BaseModel):
+    shop_id: str | None = None
+    check_type: SchedulerCheckType = "all"
+    mode: Literal["manual", "demo_scheduled"] = "manual"
+
+
+class SchedulerTriggerResponse(BaseModel):
+    status: SchedulerTriggerStatus
+    run: AgentRun | None = None
+    check_types: list[SchedulerCheckType]
+    message: str
+    duplicate_suppressed: bool = False
+
+
+class SchedulerStatus(BaseModel):
+    demo_enabled: bool
+    intervals_minutes: dict[str, int]
+    judge_brief_threshold: float
+
+
+class ProviderStatus(BaseModel):
+    name: str
+    configured: bool
+    mode: Literal["demo", "live", "hybrid"]
+    details: dict[str, Any] = Field(default_factory=dict)
+
+
+class AdminDebugStatus(BaseModel):
+    demo_mode: bool
+    brightdata: ProviderStatus
+    nvidia_nim: ProviderStatus
+    openrouter: ProviderStatus
+    live_ready: bool
+
+
+class LiveSmokeResponse(BaseModel):
+    status: Literal["ok", "error"]
+    brightdata_summary: str | None = None
+    llm_summary: str | None = None
+    debug_events: list[DebugEvent] = Field(default_factory=list)
+    error: str | None = None
 
 
 class ListResponse(BaseModel, Generic[T]):

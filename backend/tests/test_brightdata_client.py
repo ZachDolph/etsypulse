@@ -62,11 +62,92 @@ def test_debug_events_can_be_persisted(store: EtsyPulseStore) -> None:
     assert events[0].response_summary.startswith("Loaded object")
 
 
-def test_live_mode_is_guarded_without_mcp_adapter() -> None:
+def test_live_unsupported_operations_fall_back_to_cache() -> None:
     client = BrightDataClient(demo_mode=False)
 
-    with pytest.raises(BrightDataClientError):
-        client.discover("linen kitchen gifts")
+    result = client.discover("linen kitchen gifts")
 
-    assert client.debug_events[0].cache_mode == "live"
-    assert client.debug_events[0].status == "error"
+    assert result["results"]
+    assert client.debug_events[0].cache_mode == "demo"
+    assert client.debug_events[0].status == "stubbed"
+    assert "cache fallback" in client.debug_events[0].response_summary
+
+import httpx
+
+from app.config import get_settings
+from app.services.brightdata_client import BrightDataRateLimitError, BrightDataTimeoutError
+
+
+def test_live_scrape_markdown_calls_brightdata_unlocker(monkeypatch) -> None:
+    monkeypatch.setenv("DEMO_MODE", "false")
+    monkeypatch.setenv("BRIGHTDATA_API_KEY", "bd-key")
+    monkeypatch.setenv("BRIGHTDATA_UNLOCKER_ZONE", "unlocker-zone")
+    get_settings.cache_clear()
+    request = httpx.Request("POST", "https://api.brightdata.com/request")
+
+    def fake_post(url, **kwargs):
+        assert url == "https://api.brightdata.com/request"
+        assert kwargs["headers"]["Authorization"] == "Bearer bd-key"
+        assert kwargs["json"] == {
+            "zone": "unlocker-zone",
+            "url": "https://example.com",
+            "format": "raw",
+            "data_format": "markdown",
+        }
+        return httpx.Response(200, request=request, text="# Example Domain")
+
+    monkeypatch.setattr(httpx, "post", fake_post)
+    client = BrightDataClient(demo_mode=False)
+
+    assert client.scrape_markdown("https://example.com") == "# Example Domain"
+    event = client.debug_events[0]
+    assert event.cache_mode == "live"
+    assert event.status == "success"
+    assert event.request_shape["api_key"] == "[REDACTED]"
+    assert event.request_shape["unlocker_zone"] == "unlocker-zone"
+    get_settings.cache_clear()
+
+
+def test_live_unsupported_brightdata_path_uses_explicit_cache_fallback(monkeypatch) -> None:
+    monkeypatch.setenv("DEMO_MODE", "false")
+    monkeypatch.setenv("BRIGHTDATA_API_KEY", "bd-key")
+    monkeypatch.setenv("BRIGHTDATA_UNLOCKER_ZONE", "unlocker-zone")
+    get_settings.cache_clear()
+
+    client = BrightDataClient(demo_mode=False)
+    result = client.etsy_products(shop_url="https://www.etsy.com/shop/demo-linen-studio")
+
+    assert result["items"]
+    event = client.debug_events[0]
+    assert event.status == "stubbed"
+    assert event.cache_mode == "demo"
+    assert "cache fallback" in event.response_summary
+    get_settings.cache_clear()
+
+
+def test_live_brightdata_errors_are_classified(monkeypatch) -> None:
+    monkeypatch.setenv("BRIGHTDATA_API_KEY", "bd-key")
+    monkeypatch.setenv("BRIGHTDATA_UNLOCKER_ZONE", "unlocker-zone")
+    get_settings.cache_clear()
+
+    def timeout_post(*args, **kwargs):
+        raise httpx.TimeoutException("too slow")
+
+    monkeypatch.setattr(httpx, "post", timeout_post)
+    client = BrightDataClient(demo_mode=False)
+
+    with pytest.raises(BrightDataTimeoutError):
+        client.scrape_markdown("https://example.com")
+    assert client.debug_events[0].error_class == "BrightDataTimeoutError"
+
+    request = httpx.Request("POST", "https://api.brightdata.com/request")
+
+    def rate_limited_post(*args, **kwargs):
+        return httpx.Response(429, request=request, text="rate limited")
+
+    monkeypatch.setattr(httpx, "post", rate_limited_post)
+    client = BrightDataClient(demo_mode=False)
+    with pytest.raises(BrightDataRateLimitError):
+        client.scrape_markdown("https://example.com")
+    assert client.debug_events[0].error_class == "BrightDataRateLimitError"
+    get_settings.cache_clear()

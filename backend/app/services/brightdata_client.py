@@ -7,6 +7,8 @@ from time import perf_counter
 from typing import Any
 from uuid import NAMESPACE_URL, uuid5
 
+import httpx
+
 from app.config import get_settings
 from app.schemas import DebugEvent, utc_now
 
@@ -20,18 +22,34 @@ class BrightDataClientError(RuntimeError):
     pass
 
 
+class BrightDataConfigurationError(BrightDataClientError):
+    pass
+
+
+class BrightDataProviderError(BrightDataClientError):
+    pass
+
+
+class BrightDataTimeoutError(BrightDataProviderError):
+    pass
+
+
+class BrightDataRateLimitError(BrightDataProviderError):
+    pass
+
+
+class BrightDataMalformedResponseError(BrightDataProviderError):
+    pass
+
+
 class BrightDataClient:
     """Bright Data integration boundary.
 
-    Bright Data docs reviewed for Session 2:
-    - MCP FAQ lists current tools `search_engine`, `scrape_as_markdown`,
-      `scrape_as_html`, `session_stats`, `web_data_instagram_reels`, and
-      browser tools such as `scraping_browser_navigate`.
-    - Dataset docs cover structured Web Scraper APIs for TikTok, Reddit,
-      Instagram, Google, and other platforms.
-
-    App-level method names below stay stable for agents while mapping to the
-    closest Bright Data MCP/Web Scraper tool names through TOOL_NAMES.
+    Session 8 live path uses Bright Data Web Unlocker API:
+    POST https://api.brightdata.com/request with Authorization: Bearer, zone,
+    url, format=raw, and data_format=markdown for scrape_markdown.
+    Other app-level Bright Data abstractions keep deterministic demo fallback
+    until their product-specific live scrapers are wired.
     """
 
     TOOL_NAMES = {
@@ -58,6 +76,8 @@ class BrightDataClient:
         "google_shopping": "google_shopping.json",
     }
 
+    LIVE_SUPPORTED = {"scrape_markdown"}
+
     def __init__(
         self,
         demo_mode: bool | None = None,
@@ -71,6 +91,8 @@ class BrightDataClient:
         self.debug_events: list[DebugEvent] = []
         self.brightdata_api_key = settings.brightdata_api_key
         self.brightdata_mcp_url = settings.brightdata_mcp_url
+        self.unlocker_zone = settings.brightdata_unlocker_zone
+        self.timeout_seconds = settings.brightdata_timeout_seconds
 
     def etsy_products(self, shop_url: str | None = None, search_url: str | None = None) -> JsonValue:
         if not shop_url and not search_url:
@@ -126,8 +148,12 @@ class BrightDataClient:
                 "request": request_shape,
                 "mcp_url": self.brightdata_mcp_url,
                 "api_key": self.brightdata_api_key,
+                "unlocker_zone": self.unlocker_zone,
+                "timeout_seconds": self.timeout_seconds,
             }
         )
+        status = "error"
+        response_summary = "No response."
         try:
             if self.demo_mode:
                 response = self._load_fixture(operation)
@@ -135,11 +161,17 @@ class BrightDataClient:
                 response_summary = self._summarize_response(response)
                 return response
 
-            raise BrightDataClientError(
-                "Live Bright Data MCP execution is not enabled in Session 2; configure the MCP adapter in a later session."
-            )
+            if operation in self.LIVE_SUPPORTED:
+                response = self._live_scrape_markdown(str(request_shape["url"]))
+                status = "success"
+                response_summary = self._summarize_response(response)
+                return response
+
+            response = self._load_fixture(operation)
+            status = "stubbed"
+            response_summary = f"Live adapter for `{tool_name}` is not wired yet; used deterministic cache fallback. {self._summarize_response(response)}"
+            return response
         except Exception as exc:
-            status = "error"
             response_summary = f"{type(exc).__name__}: {exc}"
             raise
         finally:
@@ -148,11 +180,36 @@ class BrightDataClient:
                 operation=operation,
                 tool_name=tool_name,
                 status=status,
-                cache_mode=mode,
+                cache_mode=mode if status != "stubbed" or self.demo_mode else "demo",
                 latency_ms=latency_ms,
                 request_shape=safe_shape,
                 response_summary=response_summary,
+                error_class=None if status != "error" else response_summary.split(":", 1)[0],
             )
+
+    def _live_scrape_markdown(self, url: str) -> str:
+        if not self.brightdata_api_key or not self.unlocker_zone:
+            raise BrightDataConfigurationError("Bright Data live mode requires BRIGHTDATA_API_KEY and BRIGHTDATA_UNLOCKER_ZONE")
+        try:
+            response = httpx.post(
+                "https://api.brightdata.com/request",
+                headers={"Authorization": f"Bearer {self.brightdata_api_key}", "Content-Type": "application/json"},
+                json={"zone": self.unlocker_zone, "url": url, "format": "raw", "data_format": "markdown"},
+                timeout=self.timeout_seconds,
+            )
+            if response.status_code == 429:
+                raise BrightDataRateLimitError("Bright Data Web Unlocker rate limit or auto-throttle")
+            response.raise_for_status()
+        except httpx.TimeoutException as exc:
+            raise BrightDataTimeoutError("Bright Data Web Unlocker request timed out") from exc
+        except httpx.HTTPStatusError as exc:
+            raise BrightDataProviderError(f"Bright Data Web Unlocker HTTP {exc.response.status_code}") from exc
+        except httpx.HTTPError as exc:
+            raise BrightDataProviderError(str(exc)) from exc
+
+        if not response.text:
+            raise BrightDataMalformedResponseError("Bright Data Web Unlocker returned an empty body")
+        return response.text
 
     def _load_fixture(self, operation: str) -> Any:
         fixture_path = self.samples_dir / self.FIXTURES[operation]
@@ -172,6 +229,7 @@ class BrightDataClient:
         latency_ms: float,
         request_shape: dict[str, Any],
         response_summary: str,
+        error_class: str | None = None,
     ) -> None:
         event = DebugEvent(
             id=f"debug_brightdata_{uuid5(NAMESPACE_URL, f'{operation}:{utc_now().isoformat()}').hex[:12]}",
@@ -182,6 +240,7 @@ class BrightDataClient:
             cache_mode=cache_mode,
             latency_ms=latency_ms,
             request_shape=request_shape,
+            error_class=error_class,
             request_summary=f"{cache_mode} call for Bright Data tool `{tool_name}` with redacted request shape.",
             response_summary=response_summary,
             redacted=True,

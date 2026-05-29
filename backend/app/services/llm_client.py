@@ -30,6 +30,18 @@ class LLMProviderError(LLMClientError):
     pass
 
 
+class LLMRateLimitError(LLMProviderError):
+    pass
+
+
+class LLMTimeoutError(LLMProviderError):
+    pass
+
+
+class LLMMalformedResponseError(LLMProviderError):
+    pass
+
+
 class LLMInvalidJSONError(LLMClientError):
     pass
 
@@ -306,15 +318,23 @@ class LLMClient:
                 json=payload,
                 timeout=self.timeout_seconds,
             )
+            if response.status_code == 429:
+                raise LLMRateLimitError(f"{config.display_name} rate limited the request")
             response.raise_for_status()
             data = response.json()
+        except httpx.TimeoutException as exc:
+            raise LLMTimeoutError(f"{config.display_name} request timed out") from exc
+        except httpx.HTTPStatusError as exc:
+            raise LLMProviderError(f"{config.display_name} HTTP {exc.response.status_code}") from exc
         except httpx.HTTPError as exc:
             raise LLMProviderError(str(exc)) from exc
+        except ValueError as exc:
+            raise LLMMalformedResponseError(f"{config.display_name} returned non-JSON response") from exc
 
         try:
             content = data["choices"][0]["message"].get("content") or ""
         except (KeyError, IndexError, TypeError) as exc:
-            raise LLMProviderError("Provider response did not match OpenAI chat-completions shape") from exc
+            raise LLMMalformedResponseError("Provider response did not match OpenAI chat-completions shape") from exc
         return LLMResult(
             content=content,
             provider=config.display_name,
