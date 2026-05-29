@@ -43,6 +43,9 @@ def test_admin_debug_status_does_not_expose_secrets(monkeypatch) -> None:
     assert status.nvidia_nim.configured is True
     dumped = status.model_dump_json()
     assert "secret" not in dumped
+    assert "api_key" not in dumped.lower()
+    assert "token" not in dumped.lower()
+    assert "credential" in dumped
     assert "configured" in dumped
 
 

@@ -193,7 +193,7 @@ def provider_status() -> AdminDebugStatus:
             configured=brightdata_configured,
             mode=mode if brightdata_configured or settings.demo_mode else "hybrid",
             details={
-                "api_key": "configured" if settings.brightdata_api_key else "missing", # pragma: allowlist secret
+                "credential": "configured" if settings.brightdata_api_key else "missing",
                 "unlocker_zone": "configured" if settings.brightdata_unlocker_zone else "missing",
                 "live_tool_path": "scrape_markdown via Web Unlocker API",
             },
@@ -203,7 +203,7 @@ def provider_status() -> AdminDebugStatus:
             configured=nvidia_configured,
             mode=mode if nvidia_configured or settings.demo_mode else "hybrid",
             details={
-                "api_key": "configured" if settings.nvidia_nim_api_key else "missing", # pragma: allowlist secret
+                "credential": "configured" if settings.nvidia_nim_api_key else "missing",
                 "base_url": settings.nvidia_nim_base_url,
                 "model": settings.nvidia_nim_model or "missing",
             },
@@ -213,7 +213,7 @@ def provider_status() -> AdminDebugStatus:
             configured=openrouter_configured,
             mode=mode if openrouter_configured or settings.demo_mode else "hybrid",
             details={
-                "api_key": "configured" if settings.openrouter_api_key else "missing", # pragma: allowlist secret
+                "credential": "configured" if settings.openrouter_api_key else "missing",
                 "base_url": settings.openrouter_base_url,
                 "model": settings.openrouter_model_fallback or "missing",
             },
