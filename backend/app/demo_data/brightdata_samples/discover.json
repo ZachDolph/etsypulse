@@ -1,0 +1,17 @@
+{
+  "source_tool": "discover",
+  "mode": "demo_cache",
+  "query": "linen kitchen gifts",
+  "results": [
+    {
+      "url": "https://www.etsy.com/search?q=linen+kitchen+gifts",
+      "title": "Etsy search: linen kitchen gifts",
+      "reason": "Marketplace discovery URL for keyword monitoring."
+    },
+    {
+      "url": "https://www.google.com/search?q=linen+kitchen+gifts",
+      "title": "Google search: linen kitchen gifts",
+      "reason": "SERP discovery URL for broader buyer intent."
+    }
+  ]
+}

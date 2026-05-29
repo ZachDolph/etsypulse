@@ -1,5 +1,6 @@
 # Virtual environment
 .venv/
+**/.venv/
 
 # Environment variables — NEVER commit real keys
 .env
@@ -12,6 +13,11 @@ __pycache__/
 dist/
 build/
 *.so
+
+# Node artifacts
+node_modules/
+frontend/dist/
+*.tsbuildinfo
 
 # VSCode settings
 .vscode/
@@ -28,3 +34,6 @@ htmlcov/
 # Local VSCode settings
 .vscode/
 
+# Local app data
+data/
+backend/data/

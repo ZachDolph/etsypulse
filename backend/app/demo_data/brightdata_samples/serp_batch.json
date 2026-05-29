@@ -1,0 +1,32 @@
+{
+  "source_tool": "search_engine",
+  "mode": "demo_cache",
+  "queries": [
+    {
+      "keyword": "linen tea towel hostess gift",
+      "engine": "google",
+      "organic": [
+        {
+          "rank": 1,
+          "title": "Giftable linen towel sets",
+          "link": "https://example.com/giftable-linen-towels",
+          "description": "Neutral linen towels positioned for housewarming and hostess gifts."
+        }
+      ],
+      "related_searches": ["housewarming kitchen gifts", "linen kitchen towel set"]
+    },
+    {
+      "keyword": "neutral kitchen decor etsy",
+      "engine": "google",
+      "organic": [
+        {
+          "rank": 3,
+          "title": "Neutral kitchen textiles on Etsy",
+          "link": "https://example.com/neutral-kitchen-textiles",
+          "description": "Searchers compare handmade towels, aprons, and tote bundles."
+        }
+      ],
+      "related_searches": ["farmhouse linen towel", "minimalist kitchen gift"]
+    }
+  ]
+}

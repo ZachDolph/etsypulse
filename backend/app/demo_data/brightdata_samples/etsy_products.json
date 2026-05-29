@@ -1,0 +1,25 @@
+{
+  "source_tool": "web_data_etsy_products",
+  "mode": "demo_cache",
+  "shop_url": "https://www.etsy.com/shop/demo-linen-studio",
+  "items": [
+    {
+      "url": "https://www.etsy.com/listing/demo-linen-tea-towel",
+      "title": "Washed Linen Tea Towel Set",
+      "price": 34.0,
+      "currency": "USD",
+      "rating": 4.9,
+      "review_count": 184,
+      "tags": ["linen tea towel", "hostess gift", "neutral kitchen decor"]
+    },
+    {
+      "url": "https://www.etsy.com/listing/demo-linen-market-tote",
+      "title": "Natural Linen Market Tote",
+      "price": 46.0,
+      "currency": "USD",
+      "rating": 4.8,
+      "review_count": 96,
+      "tags": ["linen tote", "market bag", "eco gift"]
+    }
+  ]
+}

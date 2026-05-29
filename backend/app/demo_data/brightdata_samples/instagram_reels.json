@@ -1,0 +1,14 @@
+{
+  "source_tool": "web_data_instagram_reels",
+  "mode": "demo_cache",
+  "query": "neutral kitchen linen",
+  "reels": [
+    {
+      "url": "https://www.instagram.com/reel/demo-linen-1001/",
+      "caption": "Neutral kitchen reset with natural linen textures",
+      "plays": 58200,
+      "likes": 3100,
+      "hashtags": ["neutralhome", "kitchentextiles", "linenlove"]
+    }
+  ]
+}

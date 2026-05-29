@@ -1,0 +1,14 @@
+{
+  "source_tool": "web_data_reddit_posts",
+  "mode": "demo_cache",
+  "query": "housewarming kitchen gift linen towel",
+  "posts": [
+    {
+      "url": "https://www.reddit.com/r/demo/comments/linen_gift",
+      "subreddit": "BuyItForLifeDemo",
+      "title": "What is a useful housewarming gift under $50?",
+      "score": 187,
+      "summary": "Reusable kitchen linens appear as a practical gift suggestion."
+    }
+  ]
+}

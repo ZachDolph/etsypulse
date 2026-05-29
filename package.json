@@ -1,0 +1,11 @@
+{
+  "name": "etsypulse",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "backend:dev": "cd backend && uvicorn app.main:app --reload --port 8000",
+    "backend:test": "cd backend && PYTHONPATH=. pytest",
+    "frontend:dev": "cd frontend && npm run dev",
+    "frontend:build": "cd frontend && npm run build"
+  }
+}

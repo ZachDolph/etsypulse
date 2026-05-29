@@ -1,0 +1,16 @@
+{
+  "source_tool": "scrape_as_markdown",
+  "mode": "demo_cache",
+  "pages": [
+    {
+      "url": "https://www.etsy.com/shop/demo-linen-studio",
+      "markdown_file": "scrape_markdown.md",
+      "summary": "Shop page emphasizes linen kitchen textiles and giftable bundles."
+    },
+    {
+      "url": "https://www.etsy.com/shop/CottageLinenCo",
+      "markdown": "# CottageLinenCo\nCompetitor positions similar linen towels as housewarming bundles.",
+      "summary": "Competitor bundle positioning overlaps with Demo Linen Studio."
+    }
+  ]
+}

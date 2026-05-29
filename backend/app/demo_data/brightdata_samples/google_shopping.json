@@ -1,0 +1,21 @@
+{
+  "source_tool": "web_data_google_shopping",
+  "mode": "demo_cache",
+  "query": "linen tea towel set",
+  "products": [
+    {
+      "title": "Organic Linen Tea Towel Set",
+      "merchant": "Example Home Goods",
+      "price": 38.0,
+      "currency": "USD",
+      "url": "https://example.com/products/organic-linen-tea-towel-set"
+    },
+    {
+      "title": "Washed Linen Kitchen Towel Bundle",
+      "merchant": "Example Marketplace Seller",
+      "price": 42.0,
+      "currency": "USD",
+      "url": "https://example.com/products/washed-linen-kitchen-towel-bundle"
+    }
+  ]
+}
