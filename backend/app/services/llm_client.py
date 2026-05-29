@@ -71,7 +71,7 @@ class LLMClient:
       `response_format` for JSON/structured outputs.
     """
 
-    def __init__(self, debug_sink: DebugSink | None = None) -> None:
+    def __init__(self, debug_sink: DebugSink | None = None, force_test_mode: bool = False) -> None:
         settings = get_settings()
         self.debug_sink = debug_sink
         self.debug_events: list[DebugEvent] = []
@@ -79,8 +79,8 @@ class LLMClient:
         self.rate_limit_per_minute = max(settings.llm_rate_limit_per_minute, 1)
         self.json_retries = max(settings.llm_json_retries, 0)
         self._last_request_at: dict[str, float] = {}
-        self.test_mode = settings.llm_test_mode
-        self.providers = self._build_provider_order(settings)
+        self.test_mode = force_test_mode or settings.llm_test_mode
+        self.providers = self._build_provider_order(settings, force_test_mode=force_test_mode)
 
     def chat_completion(
         self,
@@ -159,8 +159,8 @@ class LLMClient:
                 )
         raise LLMInvalidJSONError(f"Unable to produce valid {response_model.__name__}: {last_error}") from last_error
 
-    def _build_provider_order(self, settings) -> list[_ProviderAttempt]:
-        if settings.llm_test_mode:
+    def _build_provider_order(self, settings, force_test_mode: bool = False) -> list[_ProviderAttempt]:
+        if force_test_mode or settings.llm_test_mode:
             return [
                 _ProviderAttempt(
                     LLMProviderConfig(

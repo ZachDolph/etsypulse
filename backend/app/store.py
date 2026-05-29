@@ -2,7 +2,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.database import ActivityRecord, BriefRecord, DebugRecord, RunRecord, ShopRecord
-from app.demo_data import DEFAULT_SHOP_URL, build_demo_run, build_shop_profile
+from app.demo_data import DEFAULT_SHOP_URL, build_shop_profile
 from app.schemas import ActivityEvent, AgentRun, Brief, DebugEvent, ShopProfile
 
 
@@ -52,22 +52,21 @@ class EtsyPulseStore:
             raise NotFoundError(f"Shop '{shop_id}' was not found")
         return ShopProfile.model_validate(record.profile)
 
-    def start_demo_run(self, shop_id: str | None = None) -> AgentRun:
-        if shop_id is None:
-            shop = self.bootstrap_shop(DEFAULT_SHOP_URL)
-        else:
-            shop = self.get_shop(shop_id)
-
-        run, activity, debug, briefs = build_demo_run(shop)
-        self.session.merge(RunRecord(id=run.id, shop_id=shop.id, run=to_json(run), created_at=run.started_at))
-        for event in activity:
-            self._upsert_activity(event)
-        for event in debug:
-            self._upsert_debug(event)
-        for brief in briefs:
-            self._upsert_brief(brief)
+    def save_shop_profile(self, profile: ShopProfile) -> None:
+        self.session.merge(ShopRecord(id=profile.id, profile=to_json(profile), created_at=profile.timestamp))
         self.session.commit()
-        return run
+
+    def start_demo_run(self, shop_id: str | None = None) -> AgentRun:
+        from app.agents.contracts import PipelineRunInput
+        from app.agents.pipeline import PipelineRunner
+        from app.services.brightdata_client import BrightDataClient
+        from app.services.llm_client import LLMClient
+
+        shop = self.bootstrap_shop(DEFAULT_SHOP_URL) if shop_id is None else self.get_shop(shop_id)
+        brightdata = BrightDataClient(demo_mode=True, debug_sink=self.record_debug_event)
+        llm_client = LLMClient(debug_sink=self.record_debug_event, force_test_mode=True)
+        pipeline = PipelineRunner(store=self, brightdata=brightdata, llm_client=llm_client)
+        return pipeline.run_demo(PipelineRunInput(shop_url=shop.shop_url)).run
 
     def get_run(self, run_id: str) -> AgentRun:
         record = self.session.get(RunRecord, run_id)
@@ -85,6 +84,18 @@ class EtsyPulseStore:
 
     def record_debug_event(self, event: DebugEvent) -> None:
         self._upsert_debug(event)
+        self.session.commit()
+
+    def record_activity_event(self, event: ActivityEvent) -> None:
+        self._upsert_activity(event)
+        self.session.commit()
+
+    def save_agent_run(self, run: AgentRun) -> None:
+        self.session.merge(RunRecord(id=run.id, shop_id=run.shop_id, run=to_json(run), created_at=run.started_at))
+        self.session.commit()
+
+    def save_brief(self, brief: Brief) -> None:
+        self._upsert_brief(brief)
         self.session.commit()
 
     def list_briefs(self) -> list[Brief]:

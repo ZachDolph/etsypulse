@@ -1,6 +1,6 @@
 # EtsyPulse Backend
 
-FastAPI service for EtsyPulse. Session 3 includes typed API contracts, deterministic demo records, SQLAlchemy persistence, a Bright Data demo-cache abstraction, and an LLM provider layer. Bright Data live calls, real agents, and live scraping are intentionally not integrated yet.
+FastAPI service for EtsyPulse. Session 5 includes typed API contracts, deterministic demo records, SQLAlchemy persistence, a Bright Data demo-cache abstraction, an LLM provider layer, deterministic backend agents, and OpenClaw-facing config docs. Bright Data live calls, OpenClaw runtime execution, and live scraping are intentionally not integrated yet.
 
 ## Local
 
@@ -83,6 +83,34 @@ Environment variables:
 - `LLM_JSON_RETRIES`
 
 Each call emits a redacted `DebugEvent` with provider, model, latency, token counts when available, error class, and whether fallback was used.
+
+
+## Deterministic Agents
+
+Session 4 adds `app.agents` with a typed `BaseAgent`, per-agent input/output contracts, and a `PipelineRunner`. `POST /runs/start-demo` uses this runner in demo mode. The runner records an `ActivityEvent` after each step and persists the final `AgentRun` and `Brief` records.
+
+Implemented agents:
+
+- `ShopBootstrapAgent`: loads cached Etsy product and markdown data to build `ShopProfile`.
+- `KeywordSerpAgent`: loads cached SERP data to produce `KeywordSignal` records.
+- `CompetitorWatchAgent`: loads cached competitor/product data to produce `CompetitorSignal` records.
+- `TrendScoutAgent`: loads cached TikTok, Reddit, Instagram, and Google Shopping data to produce `TrendSignal` records.
+- `MarketPulseAgent`: normalizes source signals into `MarketPulseSignal` records.
+- `JudgeAgent`: scores market pulse signals and uses fake LLM structured JSON in demo pipeline runs.
+- `BriefDeliveryAgent`: formats approved Judge scores into seller-facing `Brief` records.
+
+No scheduler or OpenClaw runtime dependency exists yet.
+
+## OpenClaw Adapter
+
+Session 5 adds `app.services.openclaw_adapter` plus portable docs/config examples under `docs/openclaw-config/`. The adapter maps the local seven-agent pipeline to OpenClaw agent IDs and handoff summaries without importing or requiring OpenClaw. The documented OpenClaw tool/config surfaces are `agentToAgent`, `sessions_spawn`, `sessions_send`, `sessions_history`, `agents_list`, `session_status`, `agents.list`, and `agents.defaults.subagents`.
+
+Smoke-test the OpenClaw config examples and local backend pipeline:
+
+```bash
+cd ..
+PYTHONPATH=backend backend/.venv/bin/python backend/scripts/smoke_openclaw_config.py
+```
 
 ## Test
 

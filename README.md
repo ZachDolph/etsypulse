@@ -2,7 +2,7 @@
 
 EtsyPulse is a hackathon demo for autonomous Etsy market intelligence. A seller will eventually enter an Etsy shop URL once, then the system will bootstrap market context, monitor competitors and trends, score opportunities with a Judge Agent, and show only actionable briefs.
 
-Session 0 is intentionally a skeleton: it proves the monorepo runs locally with a FastAPI backend, a React frontend, environment placeholders, and no real agent integrations yet.
+EtsyPulse is currently implemented through Session 5: the local FastAPI demo pipeline runs without credentials, and OpenClaw-facing docs/config examples are prepared without making OpenClaw a runtime dependency.
 
 ## Stack Choice
 
@@ -97,7 +97,7 @@ The target architecture is a typed multi-agent pipeline:
 6. Judge Agent scores actionability and gates briefs.
 7. Brief Delivery Agent formats seller-facing recommendations.
 
-Session 0 does not implement these agents. It only creates the deployable shell they will plug into.
+The deterministic local pipeline implements these agents as typed Python classes for demo mode. OpenClaw runtime integration remains optional and documented separately.
 
 
 ## Bright Data Demo Cache
@@ -126,6 +126,42 @@ Required for live calls:
 
 Docs consulted for Session 3: NVIDIA NIM LLM API docs for OpenAI-compatible `POST /v1/chat/completions`, NVIDIA hosted endpoint docs for `https://integrate.api.nvidia.com`, OpenRouter chat completion docs for `POST /api/v1/chat/completions`, and OpenRouter structured outputs docs for `response_format` JSON schema.
 
+
+## Deterministic Agent Pipeline
+
+Session 4 adds backend-only deterministic agents and orchestration in `backend/app/agents/`. The pipeline uses cached Bright Data fixtures through `BrightDataClient` and the fake LLM path through `LLMClient(force_test_mode=True)` for demo runs. No OpenClaw runtime, scheduler, live Bright Data call, or live LLM call is required.
+
+Agent roster implemented:
+
+- `ShopBootstrapAgent`
+- `KeywordSerpAgent`
+- `CompetitorWatchAgent`
+- `TrendScoutAgent`
+- `MarketPulseAgent`
+- `JudgeAgent`
+- `BriefDeliveryAgent`
+
+`POST /runs/start-demo` now executes the deterministic pipeline and persists the completed run, activity events, debug events, and approved briefs.
+
+## OpenClaw Portable Workflow
+
+Session 5 adds OpenClaw-facing documentation and config examples while keeping the core app runnable without OpenClaw. The recommended path is local workflow plus agent-to-agent coordination; Discord or other channel bindings are optional and intentionally excluded from the default example.
+
+Files added:
+
+- `docs/openclaw.md` explains how EtsyPulse maps local agents to OpenClaw agents.
+- `docs/openclaw-config/openclaw.local-workflow.example.json` provides a portable `agents.list`, `tools.agentToAgent`, `tools.sessions`, and `agents.defaults.subagents` example.
+- `docs/openclaw-config/AGENTS.etsypulse-coordinator.md`, `SOUL.etsypulse-coordinator.md`, and `lane-contracts.md` provide coordinator and lane instructions.
+- `backend/app/services/openclaw_adapter.py` exposes a no-runtime-dependency mapping layer for future OpenClaw execution.
+
+Smoke-test OpenClaw config examples and the backend demo pipeline:
+
+```bash
+PYTHONPATH=backend backend/.venv/bin/python backend/scripts/smoke_openclaw_config.py
+```
+
+This smoke test does not require OpenClaw, Discord, Bright Data credentials, NVIDIA NIM credentials, or OpenRouter credentials.
+
 ## Hackathon Submission Checklist
 
 - [ ] Demo mode runs from a fresh clone without credentials.
@@ -140,7 +176,7 @@ Docs consulted for Session 3: NVIDIA NIM LLM API docs for OpenAI-compatible `POS
 
 ## Current Status
 
-Implemented through Session 3:
+Implemented through Session 5:
 
 - FastAPI app with `/health`.
 - React/Vite placeholder page that calls `/health`.
@@ -151,11 +187,12 @@ Implemented through Session 3:
 - Deterministic demo records exposed through backend API routes.
 - Bright Data client abstraction with demo fixtures, redacted debug events, and fixture validation command.
 - LLM provider layer with NVIDIA NIM primary, OpenRouter fallback, fake test provider, structured JSON validation/retry, timeout/rate-limit settings, and redacted debug events.
+- Deterministic backend agent classes and pipeline orchestration with activity/debug event persistence.
+- OpenClaw portable workflow docs, config examples, no-runtime adapter, and smoke validation script.
 
 Not implemented yet:
 
-- Real agents.
+- OpenClaw runtime-backed agents beyond docs/config examples.
 - Bright Data live calls.
 - Production persistence migrations.
 - Rate limiting.
-- OpenClaw examples.

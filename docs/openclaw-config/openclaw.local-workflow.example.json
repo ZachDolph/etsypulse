@@ -1,0 +1,87 @@
+{
+  "agents": {
+    "defaults": {
+      "workspace": "~/.openclaw/workspaces/etsypulse",
+      "subagents": {
+        "allowAgents": [
+          "etsypulse-bootstrap",
+          "etsypulse-keyword-serp",
+          "etsypulse-competitor-watch",
+          "etsypulse-trend-scout",
+          "etsypulse-market-pulse",
+          "etsypulse-judge",
+          "etsypulse-brief-delivery"
+        ],
+        "maxConcurrent": 4,
+        "runTimeoutSeconds": 900
+      }
+    },
+    "list": [
+      {
+        "id": "etsypulse-coordinator",
+        "default": true,
+        "workspace": "~/.openclaw/workspaces/etsypulse/coordinator",
+        "identity": "EtsyPulse Coordinator"
+      },
+      {
+        "id": "etsypulse-bootstrap",
+        "workspace": "~/.openclaw/workspaces/etsypulse/bootstrap",
+        "identity": "EtsyPulse Shop Bootstrap Agent"
+      },
+      {
+        "id": "etsypulse-keyword-serp",
+        "workspace": "~/.openclaw/workspaces/etsypulse/keyword-serp",
+        "identity": "EtsyPulse Keyword and SERP Agent"
+      },
+      {
+        "id": "etsypulse-competitor-watch",
+        "workspace": "~/.openclaw/workspaces/etsypulse/competitor-watch",
+        "identity": "EtsyPulse Competitor Watch Agent"
+      },
+      {
+        "id": "etsypulse-trend-scout",
+        "workspace": "~/.openclaw/workspaces/etsypulse/trend-scout",
+        "identity": "EtsyPulse Trend Scout Agent"
+      },
+      {
+        "id": "etsypulse-market-pulse",
+        "workspace": "~/.openclaw/workspaces/etsypulse/market-pulse",
+        "identity": "EtsyPulse Market Pulse Agent"
+      },
+      {
+        "id": "etsypulse-judge",
+        "workspace": "~/.openclaw/workspaces/etsypulse/judge",
+        "identity": "EtsyPulse Judge Agent"
+      },
+      {
+        "id": "etsypulse-brief-delivery",
+        "workspace": "~/.openclaw/workspaces/etsypulse/brief-delivery",
+        "identity": "EtsyPulse Brief Delivery Agent"
+      }
+    ]
+  },
+  "tools": {
+    "agentToAgent": {
+      "enabled": true,
+      "allow": [
+        "etsypulse-coordinator",
+        "etsypulse-bootstrap",
+        "etsypulse-keyword-serp",
+        "etsypulse-competitor-watch",
+        "etsypulse-trend-scout",
+        "etsypulse-market-pulse",
+        "etsypulse-judge",
+        "etsypulse-brief-delivery"
+      ]
+    },
+    "sessions": {
+      "visibility": "tree"
+    },
+    "sessions_spawn": {
+      "attachments": {
+        "enabled": false
+      }
+    }
+  },
+  "bindings": []
+}
