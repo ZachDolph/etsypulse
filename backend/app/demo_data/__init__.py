@@ -32,8 +32,12 @@ def stable_id(prefix: str, value: str) -> str:
     return f"{prefix}_{uuid5(NAMESPACE_URL, value).hex[:12]}"
 
 
-def fixed_time() -> datetime:
-    return datetime(2026, 5, 27, 12, 0, tzinfo=timezone.utc)
+def fixed_time(days_ago: int = 0) -> datetime:
+    base = datetime(2026, 5, 27, 12, 0, tzinfo=timezone.utc)
+    if days_ago:
+        from datetime import timedelta
+        return base - timedelta(days=days_ago)
+    return base
 
 
 def demo_source(tool: str, url: str | None = None) -> EvidenceSource:
@@ -237,3 +241,107 @@ def build_demo_run(shop: ShopProfile) -> tuple[AgentRun, list[ActivityEvent], li
         ),
     ]
     return run, activity, debug, [brief]
+
+
+def build_historical_brief_1(shop: ShopProfile) -> Brief:
+    """'Occasion keywords' brief — 3 days ago."""
+    run_id = stable_id("run", f"{shop.id}:session-hist-1")
+    source = demo_source("demo_fixture", shop.shop_url)
+    pulse = MarketPulseSignal(
+        id=stable_id("pulse", f"{run_id}:occasion-keywords"),
+        run_id=run_id,
+        title="Add graduation and anniversary keywords before summer demand",
+        summary="SERP data shows occasion-specific searches (graduation gift, anniversary jewelry) surging 3–4 weeks before holidays. Existing listings can capture this traffic with title and tag updates only.",
+        severity="medium",
+        novelty=0.64,
+        confidence=0.81,
+        source_signal_ids=[],
+        provenance=[source],
+        originating_agent="Market Pulse Agent",
+        timestamp=fixed_time(days_ago=3),
+    )
+    score = JudgeScore(
+        id=stable_id("judge", pulse.id),
+        run_id=run_id,
+        market_pulse_signal_id=pulse.id,
+        actionability=0.84,
+        urgency=0.79,
+        confidence=0.81,
+        novelty=0.64,
+        business_impact=0.77,
+        evidence_quality=0.80,
+        total_score=0.78,
+        decision="brief",
+        rationale="Occasion keyword updates require no new inventory — add graduation, anniversary, and birthday phrases to top listing titles and tags before seasonal search volume peaks.",
+        timestamp=fixed_time(days_ago=3),
+    )
+    return Brief(
+        id=stable_id("brief", score.id),
+        run_id=run_id,
+        shop_id=shop.id,
+        title="Add occasion keywords to top listings before summer gifting peaks",
+        summary=pulse.summary,
+        recommended_actions=[
+            "Add 'graduation gift', 'anniversary jewelry', and 'birthday necklace' to your top 5 listing titles.",
+            "Update listing tags to include occasion phrases — these have low competition but high buyer intent.",
+            "Pin your gift-occasion listings to the top of your shop for the next 6 weeks.",
+        ],
+        evidence=[pulse.title, score.rationale],
+        why_now="Occasion search volume ramps 3–4 weeks before peak gifting dates. Acting now captures early-funnel traffic before competitors optimize.",
+        confidence=0.81,
+        judge_score=score,
+        provenance=[source],
+        timestamp=fixed_time(days_ago=3),
+    )
+
+
+def build_historical_brief_2(shop: ShopProfile) -> Brief:
+    """'Hero photo refresh' brief — 6 days ago."""
+    run_id = stable_id("run", f"{shop.id}:session-hist-2")
+    source = demo_source("demo_fixture", shop.shop_url)
+    pulse = MarketPulseSignal(
+        id=stable_id("pulse", f"{run_id}:hero-photo-refresh"),
+        run_id=run_id,
+        title="Gift-unboxing and packaging photos outperform plain product shots in current trend data",
+        summary="Instagram Reels and TikTok data confirm that lifestyle and unboxing visuals for personalized jewelry are driving 2–3× more engagement than white-background product photos. Updating hero images across ring and necklace listings is a zero-inventory change.",
+        severity="medium",
+        novelty=0.71,
+        confidence=0.79,
+        source_signal_ids=[],
+        provenance=[source],
+        originating_agent="Market Pulse Agent",
+        timestamp=fixed_time(days_ago=6),
+    )
+    score = JudgeScore(
+        id=stable_id("judge", pulse.id),
+        run_id=run_id,
+        market_pulse_signal_id=pulse.id,
+        actionability=0.82,
+        urgency=0.68,
+        confidence=0.79,
+        novelty=0.71,
+        business_impact=0.74,
+        evidence_quality=0.83,
+        total_score=0.76,
+        decision="brief",
+        rationale="Replacing hero photos with gift-ready and lifestyle images is a high-impact, zero-inventory change that directly aligns with current social trend signals.",
+        timestamp=fixed_time(days_ago=6),
+    )
+    return Brief(
+        id=stable_id("brief", score.id),
+        run_id=run_id,
+        shop_id=shop.id,
+        title="Refresh hero photos to lead with gift-ready styling and unboxing",
+        summary=pulse.summary,
+        recommended_actions=[
+            "Reshoot or source lifestyle photos showing your jewelry being unwrapped, gifted, or worn in a celebratory context.",
+            "Make the first listing image show the product in gift-ready packaging — box, ribbon, and handwritten note.",
+            "A/B test the new hero against the current product shot and track click-through rate changes over 2 weeks.",
+        ],
+        evidence=[pulse.title, score.rationale],
+        why_now="Social trend data shows gift-framed visuals outperforming product shots right now. This is a photo swap, not an inventory change — implementable today.",
+        confidence=0.79,
+        judge_score=score,
+        provenance=[source],
+        timestamp=fixed_time(days_ago=6),
+    )

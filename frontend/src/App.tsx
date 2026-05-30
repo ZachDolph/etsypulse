@@ -23,8 +23,13 @@ import {
 import './styles.css';
 
 const DEMO_SHOP_URL = 'https://www.etsy.com/shop/CaitlynMinimalist';
-const WAKEUP_MAX_RETRIES = 20;   // 20 × 8s = 160s — covers Render's worst cold starts
+const WAKEUP_MAX_RETRIES = 20;
 const WAKEUP_INTERVAL_MS = 8000;
+
+const AGENT_STEPS = [
+  'Shop Bootstrap', 'Keyword & SERP', 'Competitor Watch',
+  'Trend Scout', 'Market Pulse', 'Judge Agent', 'Brief Delivery',
+];
 
 type DashboardData = {
   health: HealthResponse | null;
@@ -53,6 +58,7 @@ function App() {
   const [shopUrl, setShopUrl] = useState(DEMO_SHOP_URL);
   const [loading, setLoading] = useState(true);
   const [running, setRunning] = useState(false);
+  const [runningStep, setRunningStep] = useState(-1);
   const [error, setError] = useState<string | null>(null);
   const [wakeupAttempt, setWakeupAttempt] = useState(0);
   const [wakeupCountdown, setWakeupCountdown] = useState<number | null>(null);
@@ -153,13 +159,17 @@ function App() {
   }
 
   async function runDemo(url: string) {
-    // If we've never connected, reload to restart the wakeup sequence instead of failing silently
     if (!hasConnectedRef.current) {
       window.location.reload();
       return;
     }
     setRunning(true);
+    setRunningStep(0);
     setError(null);
+    // Animate through agent steps for visual feedback (~180ms per step)
+    const stepTimers = AGENT_STEPS.map((_, i) =>
+      window.setTimeout(() => setRunningStep(i), i * 200),
+    );
     try {
       const shop = await bootstrapShop(url);
       const result = await triggerScheduledRun(shop.id);
@@ -171,11 +181,14 @@ function App() {
         getHealth(),
         getAdminDebugStatus(),
       ]);
+      setRunningStep(AGENT_STEPS.length); // mark all done
       setData({ health, scheduler, shop, run: result.run, briefs, activity, debugEvents, adminStatus });
     } catch (err: unknown) {
       setError(readError(err));
     } finally {
+      stepTimers.forEach(window.clearTimeout);
       setRunning(false);
+      setRunningStep(-1);
     }
   }
 
@@ -212,16 +225,7 @@ function App() {
             </button>
             <a className="ghost-link" href="#briefs">View approved briefs</a>
           </div>
-        </div>
-        <div className="signal-card" aria-label="Demo status">
-          <DemoBanner health={data.health} loading={loading} />
-          <div className="radar">
-            <span />
-            <span />
-            <span />
-          </div>
-          <p className="signal-title">Monitoring cadence</p>
-          <p className="signal-copy">Keyword {data.scheduler?.intervals_minutes.keyword ?? '...'}m · Competitor {data.scheduler?.intervals_minutes.competitor ?? '...'}m · Trend {data.scheduler?.intervals_minutes.trend ?? '...'}m</p>
+          {running && <AgentProgress activeStep={runningStep} />}
         </div>
       </section>
 
@@ -277,6 +281,8 @@ function App() {
           <DebugPanel debugEvents={data.debugEvents} brightDataCount={brightDataEvents.length} llmCount={llmEvents.length} />
         </aside>
       </section>
+
+      <MonitoringBar health={data.health} scheduler={data.scheduler} loading={loading} />
     </main>
   );
 }
@@ -299,6 +305,53 @@ function WorkflowRibbon() {
         </article>
       ))}
     </section>
+  );
+}
+
+function AgentProgress({ activeStep }: { activeStep: number }) {
+  return (
+    <div className="agent-progress" aria-live="polite" aria-label="Agent pipeline progress">
+      {AGENT_STEPS.map((name, i) => {
+        const isDone = activeStep > i;
+        const isCurrent = activeStep === i;
+        return (
+          <span key={name}>
+            <span className={`agent-step ${isDone ? 'done' : ''} ${isCurrent ? 'current active' : ''}`}>
+              <span className="step-dot" />
+              {name}
+            </span>
+            {i < AGENT_STEPS.length - 1 && <span className="agent-step-arrow">›</span>}
+          </span>
+        );
+      })}
+    </div>
+  );
+}
+
+function MonitoringBar({ health, scheduler, loading }: { health: HealthResponse | null; scheduler: SchedulerStatus | null; loading: boolean }) {
+  return (
+    <div className="monitoring-bar" aria-label="Monitoring status">
+      <div className="monitoring-bar-left">
+        <span className="monitoring-mode-badge">
+          {loading ? 'Checking…' : health?.demo_mode ? '✓ Demo mode — no credentials required' : '⚡ Live mode'}
+        </span>
+      </div>
+      <div className="monitoring-bar-right">
+        <span>Autonomous monitoring cadence</span>
+        <span className="monitoring-interval">
+          <span className="monitoring-interval-label">Keywords</span>
+          <span className="monitoring-interval-value">every {scheduler?.intervals_minutes.keyword ?? '—'}m</span>
+        </span>
+        <span className="monitoring-interval">
+          <span className="monitoring-interval-label">Competitors</span>
+          <span className="monitoring-interval-value">every {scheduler?.intervals_minutes.competitor ?? '—'}m</span>
+        </span>
+        <span className="monitoring-interval">
+          <span className="monitoring-interval-label">Trends</span>
+          <span className="monitoring-interval-value">every {scheduler?.intervals_minutes.trend ?? '—'}m</span>
+        </span>
+      </div>
+    </div>
   );
 }
 
@@ -461,19 +514,24 @@ function MarketPulsePanel({ run }: { run: AgentRun | null }) {
       {!run && <EmptyPanel title="No run selected" message="After a demo run, keyword, competitor, trend, and normalized market pulse signals appear here." />}
       {run && (
         <div className="pulse-grid">
+          <SignalColumn
+            title="Market Pulse"
+            featured
+            items={run.market_pulse_signals.map((signal) => ({ title: signal.title, body: signal.summary, metric: signal.severity }))}
+          />
           <SignalColumn title="Keywords" items={run.keyword_signals.map((signal) => ({ title: signal.keyword, body: signal.opportunity, metric: percent(signal.visibility_score) }))} />
           <SignalColumn title="Competitors" items={run.competitor_signals.map((signal) => ({ title: signal.competitor_name, body: signal.signal, metric: signal.price_delta_percent == null ? signal.severity : `${signal.price_delta_percent}%` }))} />
           <SignalColumn title="Social trends" items={run.trend_signals.map((signal) => ({ title: `${signal.platform}: ${signal.topic}`, body: signal.signal, metric: percent(signal.momentum_score) }))} />
-          <SignalColumn title="Pulse events" items={run.market_pulse_signals.map((signal) => ({ title: signal.title, body: signal.summary, metric: signal.severity }))} />
         </div>
       )}
     </section>
   );
 }
 
-function SignalColumn({ title, items }: { title: string; items: Array<{ title: string; body: string; metric: string }> }) {
+function SignalColumn({ title, featured, items }: { title: string; featured?: boolean; items: Array<{ title: string; body: string; metric: string }> }) {
   return (
-    <div className="signal-column">
+    <div className={`signal-column${featured ? ' featured' : ''}`}>
+      {featured && <span className="featured-label">Judge input</span>}
       <h3>{title}</h3>
       {items.length === 0 && <p className="muted-copy">No signals yet.</p>}
       {items.slice(0, 4).map((item) => (
@@ -541,7 +599,7 @@ function ProviderStatusPanel({ adminStatus }: { adminStatus: AdminDebugStatus | 
             <span className={provider.configured ? 'status-dot ready' : 'status-dot missing'} />
             <div>
               <strong>{provider.name}</strong>
-              <p>{provider.configured ? 'configured' : 'not configured'} · {provider.mode} mode</p>
+              <p>{provider.configured ? `configured · ${provider.mode} mode` : 'demo mode — cached fixtures'}</p>
             </div>
           </article>
         ))}

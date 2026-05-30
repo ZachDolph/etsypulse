@@ -2,7 +2,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.database import ActivityRecord, BriefRecord, DebugRecord, RunRecord, ShopRecord
-from app.demo_data import DEFAULT_SHOP_URL, build_shop_profile
+from app.demo_data import DEFAULT_SHOP_URL, build_historical_brief_1, build_historical_brief_2, build_shop_profile
 from app.schemas import ActivityEvent, AgentRun, Brief, DebugEvent, ShopProfile
 
 
@@ -110,7 +110,15 @@ class EtsyPulseStore:
 
     def ensure_demo_seeded(self) -> None:
         shop = self.bootstrap_shop(DEFAULT_SHOP_URL)
+        # Run the live pipeline to produce the primary brief
         self.start_demo_run(shop.id)
+        # Seed two additional historical briefs so the dashboard shows a history of intelligence
+        for builder in (build_historical_brief_2, build_historical_brief_1):
+            brief = builder(shop)
+            existing = self.session.get(__import__("app.database", fromlist=["BriefRecord"]).BriefRecord, brief.id)
+            if not existing:
+                self._upsert_brief(brief)
+        self.session.commit()
 
     def _upsert_activity(self, event: ActivityEvent) -> None:
         self.session.merge(ActivityRecord(id=event.id, timestamp=event.timestamp, event=to_json(event)))

@@ -101,11 +101,8 @@ button:disabled {
 }
 
 .hero-panel {
-  display: grid;
-  grid-template-columns: minmax(0, 1.35fr) minmax(310px, 0.65fr);
-  gap: clamp(1.2rem, 3vw, 2rem);
-  align-items: stretch;
-  min-height: 520px;
+  display: block;
+  min-height: auto;
 }
 
 .hero-copy,
@@ -252,10 +249,9 @@ h3 {
 }
 
 h1 {
-  max-width: 11.5ch;
-  font-size: clamp(3.3rem, 8vw, 8.5rem);
-  line-height: 0.86;
-  letter-spacing: -0.06em;
+  font-size: clamp(2.8rem, 7vw, 8rem);
+  line-height: 0.88;
+  letter-spacing: -0.055em;
   font-weight: 700;
 }
 
@@ -914,12 +910,11 @@ time { color: var(--muted); font-size: 0.76rem; }
 }
 
 @media (max-width: 1050px) {
-  .hero-panel,
   .setup-grid,
   .dashboard-grid,
   .workflow-ribbon { grid-template-columns: 1fr; }
-  .signal-card { min-height: auto; }
-  .radar { width: min(20rem, 76vw); }
+  .monitoring-bar { flex-direction: column; align-items: flex-start; }
+  .monitoring-bar-right { flex-wrap: wrap; gap: 0.75rem; }
 }
 
 @media (max-width: 720px) {
@@ -942,6 +937,167 @@ time { color: var(--muted); font-size: 0.76rem; }
   .pulse-grid,
   .score-grid { grid-template-columns: 1fr; }
   .score-item { grid-template-columns: 4.6rem 1fr 2.7rem; }
+}
+
+/* ── Monitoring status bar (bottom of page) ──────────────────────────────── */
+.monitoring-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1rem;
+  padding: 0.9rem 1.4rem;
+  border-radius: 20px;
+  background: linear-gradient(135deg, rgba(33, 22, 15, 0.88), rgba(60, 38, 22, 0.82));
+  border: 1px solid rgba(255, 247, 234, 0.1);
+  color: rgba(255, 244, 223, 0.8);
+  font-size: 0.82rem;
+  font-family: 'Inter', sans-serif;
+}
+
+.monitoring-bar-left {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.monitoring-mode-badge {
+  padding: 0.3rem 0.65rem;
+  border-radius: 999px;
+  background: rgba(111, 134, 99, 0.25);
+  border: 1px solid rgba(111, 134, 99, 0.35);
+  color: #c0d4b0;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.monitoring-bar-right {
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+  color: rgba(255, 244, 223, 0.55);
+}
+
+.monitoring-interval {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.monitoring-interval-label {
+  font-weight: 600;
+  color: rgba(255, 244, 223, 0.75);
+  font-size: 0.78rem;
+}
+
+.monitoring-interval-value {
+  font-size: 0.78rem;
+  font-family: 'Inter', monospace;
+  color: var(--gold);
+}
+
+/* ── Agent progress indicator ─────────────────────────────────────────────── */
+.agent-progress {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 0;
+  padding: 0.9rem 1.1rem;
+  margin: 0.75rem 0;
+  border-radius: 18px;
+  background: rgba(33, 22, 15, 0.06);
+  border: 1px solid var(--line);
+  animation: reveal 400ms ease both;
+}
+
+.agent-step {
+  display: flex;
+  align-items: center;
+  gap: 0.32rem;
+  padding: 0.22rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  font-family: 'Inter', sans-serif;
+  color: var(--muted);
+  transition: all 200ms ease;
+}
+
+.agent-step-arrow {
+  color: rgba(91, 59, 39, 0.3);
+  font-size: 0.65rem;
+  margin: 0 0.1rem;
+}
+
+.agent-step.active {
+  color: var(--soil);
+}
+
+.agent-step.current {
+  background: rgba(180, 87, 45, 0.1);
+  color: var(--copper-dark);
+  font-weight: 700;
+}
+
+.agent-step.done {
+  color: var(--sage);
+}
+
+.step-dot {
+  width: 0.42rem;
+  height: 0.42rem;
+  border-radius: 50%;
+  background: currentColor;
+  flex-shrink: 0;
+}
+
+.agent-step.current .step-dot {
+  background: var(--copper);
+  box-shadow: 0 0 0 4px rgba(180, 87, 45, 0.15);
+  animation: pulse-dot 0.9s ease-in-out infinite;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { box-shadow: 0 0 0 4px rgba(180, 87, 45, 0.15); }
+  50% { box-shadow: 0 0 0 7px rgba(180, 87, 45, 0.06); }
+}
+
+/* ── Brief card h3 title truncation ──────────────────────────────────────── */
+.brief-card h3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  line-height: 1.25;
+  margin: 0.45rem 0 0.5rem;
+  font-size: 1.1rem;
+}
+
+/* ── Pulse events — featured signal column ───────────────────────────────── */
+.signal-column.featured {
+  background: linear-gradient(145deg, rgba(180, 87, 45, 0.1), rgba(213, 154, 56, 0.06));
+  border: 2px solid rgba(180, 87, 45, 0.22);
+  border-radius: 24px;
+  padding: 1rem;
+}
+
+.signal-column.featured h3 {
+  color: var(--copper-dark);
+}
+
+.signal-column.featured .featured-label {
+  display: inline-block;
+  padding: 0.2rem 0.5rem;
+  border-radius: 999px;
+  background: rgba(180, 87, 45, 0.12);
+  color: var(--copper);
+  font-size: 0.67rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 0.5rem;
 }
 
 .provider-list {
