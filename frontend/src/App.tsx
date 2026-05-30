@@ -22,7 +22,7 @@ import {
 } from './api';
 import './styles.css';
 
-const DEMO_SHOP_URL = 'https://www.etsy.com/shop/demo-linen-studio';
+const DEMO_SHOP_URL = 'https://www.etsy.com/shop/CaitlynMinimalist';
 
 type DashboardData = {
   health: HealthResponse | null;
@@ -138,7 +138,7 @@ function App() {
           </p>
           <div className="hero-actions">
             <button className="primary-action" disabled={running} onClick={() => runDemo(DEMO_SHOP_URL)}>
-              {running ? 'Agents running...' : 'Run demo shop'}
+              {running ? 'Agents running...' : 'Run CaitlynMinimalist demo'}
             </button>
             <a className="ghost-link" href="#briefs">View approved briefs</a>
           </div>
@@ -168,7 +168,7 @@ function App() {
             <button disabled={running}>{running ? 'Monitoring...' : 'Monitor'}</button>
           </div>
           <button className="secondary-action" type="button" disabled={running} onClick={() => runDemo(DEMO_SHOP_URL)}>
-            Use deterministic demo shop
+            Use CaitlynMinimalist demo
           </button>
         </form>
 
@@ -220,7 +220,7 @@ function ShopCard({ shop }: { shop: ShopProfile | null }) {
       <article className="shop-card empty-state">
         <p className="section-kicker">Shop profile</p>
         <h2>Waiting for a shop.</h2>
-        <p>Use the demo shop to populate listings, seed keywords, competitor seeds, and baseline positioning.</p>
+        <p>Use the CaitlynMinimalist demo to populate listings, seed keywords, competitor seeds, and baseline positioning.</p>
       </article>
     );
   }

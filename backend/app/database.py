@@ -58,7 +58,16 @@ class BriefRecord(Base):
     brief: Mapped[dict[str, Any]] = mapped_column(JSON().with_variant(SQLiteJSON, "sqlite"), nullable=False)
 
 
+def normalize_database_url(database_url: str) -> str:
+    if database_url.startswith("postgres://"):
+        return database_url.replace("postgres://", "postgresql+psycopg://", 1)
+    if database_url.startswith("postgresql://"):
+        return database_url.replace("postgresql://", "postgresql+psycopg://", 1)
+    return database_url
+
+
 def build_engine(database_url: str):
+    database_url = normalize_database_url(database_url)
     if database_url.startswith("sqlite") and "///" in database_url and ":memory:" not in database_url:
         db_path = database_url.split("///", 1)[1]
         Path(db_path).parent.mkdir(parents=True, exist_ok=True)

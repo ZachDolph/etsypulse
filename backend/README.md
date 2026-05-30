@@ -17,6 +17,7 @@ The default database is `sqlite:///./data/etsypulse.db`. Set `DATABASE_URL` to a
 ## API Routes
 
 - `GET /health`
+- `GET /ready`
 - `POST /shops/bootstrap-request`
 - `GET /shops/{shop_id}`
 - `POST /runs/start-demo`
@@ -57,6 +58,7 @@ Configurable settings:
 - `SCHEDULER_COMPETITOR_INTERVAL_MINUTES`
 - `SCHEDULER_TREND_INTERVAL_MINUTES`
 - `SCHEDULER_DEMO_ENABLED`
+- `RATE_LIMIT_ENABLED`
 - `RATE_LIMIT_PUBLIC_PER_MINUTE`
 - `RATE_LIMIT_SHOP_PER_HOUR`
 - `JUDGE_BRIEF_THRESHOLD`
@@ -98,6 +100,18 @@ Smoke-test OpenClaw config examples and local pipeline health:
 cd ..
 PYTHONPATH=backend backend/.venv/bin/python backend/scripts/smoke_openclaw_config.py
 ```
+
+## Deployment
+
+The backend ships with Docker and Render support:
+
+```bash
+docker build -t etsypulse-api:local backend
+PYTHONPATH=backend backend/.venv/bin/python backend/scripts/validate_deployment_env.py
+PYTHONPATH=backend backend/.venv/bin/python backend/scripts/seed_demo_data.py
+```
+
+Render uses `backend/Dockerfile`, `render.yaml`, and `/ready` for health checks. Production should use hosted Postgres through `DATABASE_URL`; SQLite is for local development only.
 
 ## Tests
 

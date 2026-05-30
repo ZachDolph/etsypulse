@@ -4,11 +4,12 @@ from typing import Annotated, Literal
 
 from fastapi import Body, Depends, FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
+from sqlalchemy import text as sql_text
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
-from app.config import get_settings
+from app.config import deployment_warnings, get_settings
 from app.database import SessionLocal, get_session, init_db
 from app.schemas import (
     ActivityEvent,
@@ -25,6 +26,7 @@ from app.schemas import (
     ShopProfile,
     StartDemoRunRequest,
 )
+from app.logging_config import setup_logging
 from app.services.brightdata_client import BrightDataClient
 from app.services.llm_client import LLMClient, LLMClientError
 from app.services.rate_limiter import RateLimiter, RateLimitExceededError
@@ -42,7 +44,16 @@ class HealthResponse(BaseModel):
     demo_mode: bool
 
 
+class ReadinessResponse(BaseModel):
+    status: Literal["ok", "degraded"]
+    service: str
+    demo_mode: bool
+    database: Literal["ok", "error"]
+    warnings: list[str]
+
+
 settings = get_settings()
+setup_logging(settings.log_level)
 rate_limiter = RateLimiter(settings.rate_limit_public_per_minute, settings.rate_limit_shop_per_hour)
 scheduler_service = SchedulerService(settings)
 
@@ -77,6 +88,8 @@ app.add_middleware(
 
 @app.middleware("http")
 async def rate_limit_public_requests(request: Request, call_next):
+    if not settings.rate_limit_enabled:
+        return await call_next(request)
     client_ip = request.client.host if request.client else "unknown"
     try:
         rate_limiter.check_ip(client_ip)
@@ -90,6 +103,8 @@ async def rate_limit_public_requests(request: Request, call_next):
 
 
 def enforce_shop_rate_limit(shop_key: str) -> None:
+    if not settings.rate_limit_enabled:
+        return
     try:
         rate_limiter.check_shop(shop_key)
     except RateLimitExceededError as exc:
@@ -107,6 +122,29 @@ def get_store(session: Annotated[Session, Depends(get_session)]) -> EtsyPulseSto
 @app.get("/health", response_model=HealthResponse)
 def health() -> HealthResponse:
     return HealthResponse(status="ok", service="etsypulse-api", demo_mode=settings.demo_mode)
+
+
+@app.get("/ready", response_model=ReadinessResponse)
+def readiness() -> ReadinessResponse:
+    warnings = deployment_warnings(settings)
+    try:
+        with SessionLocal() as session:
+            session.execute(sql_text("SELECT 1"))
+    except Exception as exc:
+        return ReadinessResponse(
+            status="degraded",
+            service="etsypulse-api",
+            demo_mode=settings.demo_mode,
+            database="error",
+            warnings=[*warnings, f"Database readiness check failed: {type(exc).__name__}"],
+        )
+    return ReadinessResponse(
+        status="ok",
+        service="etsypulse-api",
+        demo_mode=settings.demo_mode,
+        database="ok",
+        warnings=warnings,
+    )
 
 
 @app.post("/shops/bootstrap-request", response_model=ShopProfile)

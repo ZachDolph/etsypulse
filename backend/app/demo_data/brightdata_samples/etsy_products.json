@@ -1,25 +1,60 @@
 {
   "source_tool": "web_data_etsy_products",
   "mode": "demo_cache",
-  "shop_url": "https://www.etsy.com/shop/demo-linen-studio",
+  "shop_url": "https://www.etsy.com/shop/CaitlynMinimalist",
+  "shop_name": "CaitlynMinimalist",
+  "category": "Jewelry / Personalized Gifts",
+  "summary": "Popular Etsy jewelry shop known for minimalist personalized necklaces, rings, bracelets, and gift-ready keepsakes.",
+  "seed_keywords": [
+    "personalized necklace",
+    "name necklace",
+    "minimalist jewelry",
+    "birth flower necklace"
+  ],
+  "likely_competitors": [
+    "GLDNxLayeredAndLong",
+    "GracePersonalized"
+  ],
+  "baseline_positioning": "High-volume personalized jewelry brand competing on minimalist style, gifting intent, and customization speed.",
   "items": [
     {
-      "url": "https://www.etsy.com/listing/demo-linen-tea-towel",
-      "title": "Washed Linen Tea Towel Set",
-      "price": 34.0,
+      "url": "https://www.etsy.com/listing/demo-personalized-name-necklace",
+      "title": "Personalized Name Necklace",
+      "price": 32.0,
       "currency": "USD",
       "rating": 4.9,
-      "review_count": 184,
-      "tags": ["linen tea towel", "hostess gift", "neutral kitchen decor"]
+      "review_count": 90000,
+      "tags": [
+        "personalized necklace",
+        "name necklace",
+        "minimalist jewelry"
+      ]
     },
     {
-      "url": "https://www.etsy.com/listing/demo-linen-market-tote",
-      "title": "Natural Linen Market Tote",
-      "price": 46.0,
+      "url": "https://www.etsy.com/listing/demo-birth-flower-necklace",
+      "title": "Birth Flower Necklace",
+      "price": 38.0,
+      "currency": "USD",
+      "rating": 4.9,
+      "review_count": 42000,
+      "tags": [
+        "birth flower necklace",
+        "custom jewelry",
+        "gift for her"
+      ]
+    },
+    {
+      "url": "https://www.etsy.com/listing/demo-dainty-initial-ring",
+      "title": "Dainty Initial Ring",
+      "price": 28.0,
       "currency": "USD",
       "rating": 4.8,
-      "review_count": 96,
-      "tags": ["linen tote", "market bag", "eco gift"]
+      "review_count": 18000,
+      "tags": [
+        "initial ring",
+        "personalized jewelry",
+        "minimalist ring"
+      ]
     }
   ]
 }

@@ -97,7 +97,7 @@ def test_structured_json_retries_after_invalid_json(monkeypatch) -> None:
 def test_provider_order_uses_openrouter_fallback(monkeypatch) -> None:
     monkeypatch.setenv("NVIDIA_NIM_API_KEY", "nim-key")
     monkeypatch.setenv("NVIDIA_NIM_MODEL", "nvidia/test-model")
-    monkeypatch.setenv("OPENROUTER_API_KEY", "openrouter-key")
+    monkeypatch.setenv("OPENROUTER_API_KEY", "or-key")
     monkeypatch.setenv("OPENROUTER_MODEL_FALLBACK", "meta-llama/llama-3.1-8b-instruct:free")
     monkeypatch.setenv("LLM_RATE_LIMIT_PER_MINUTE", "100000")
     get_settings.cache_clear()
@@ -111,7 +111,7 @@ def test_provider_order_uses_openrouter_fallback(monkeypatch) -> None:
             response = httpx.Response(503, request=request, json={"error": "nim unavailable"})
             raise httpx.HTTPStatusError("service unavailable", request=request, response=response)
         assert url == "https://openrouter.ai/api/v1/chat/completions"
-        assert kwargs["headers"]["Authorization"] == "Bearer openrouter-key"
+        assert kwargs["headers"]["Authorization"] == "Bearer or-key"
         return httpx.Response(
             200,
             request=request,

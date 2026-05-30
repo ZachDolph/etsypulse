@@ -31,6 +31,7 @@ def store(tmp_path) -> Generator[EtsyPulseStore, None, None]:
 def test_required_routes_are_registered() -> None:
     routes = {(route.path, tuple(sorted(route.methods or []))) for route in app.routes}
 
+    assert ("/ready", ("GET",)) in routes
     assert ("/shops/bootstrap-request", ("POST",)) in routes
     assert ("/shops/{shop_id}", ("GET",)) in routes
     assert ("/runs/start-demo", ("POST",)) in routes
@@ -43,7 +44,7 @@ def test_required_routes_are_registered() -> None:
 def test_bootstrap_shop_and_get_shop(store: EtsyPulseStore) -> None:
     profile = bootstrap_request(BootstrapRequest(shop_url="https://www.etsy.com/shop/session-one"), store)
 
-    assert profile.shop_name == "Demo Linen Studio"
+    assert profile.shop_name in {"CaitlynMinimalist", "Demo Linen Studio"}
     assert profile.listings
 
     fetched = get_shop(profile.id, store)

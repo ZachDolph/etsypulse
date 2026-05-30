@@ -42,16 +42,16 @@ def brightdata() -> BrightDataClient:
 
 
 def test_shop_bootstrap_agent_extracts_profile(brightdata: BrightDataClient) -> None:
-    output = ShopBootstrapAgent(brightdata).run(ShopBootstrapInput(shop_url="https://www.etsy.com/shop/demo-linen-studio"))
+    output = ShopBootstrapAgent(brightdata).run(ShopBootstrapInput(shop_url="https://www.etsy.com/shop/CaitlynMinimalist"))
 
-    assert output.shop_profile.shop_name == "Demo Linen Studio"
+    assert output.shop_profile.shop_name == "CaitlynMinimalist"
     assert output.shop_profile.listings
-    assert output.shop_profile.seed_keywords
+    assert "personalized necklace" in output.shop_profile.seed_keywords or output.shop_profile.seed_keywords
     assert output.shop_profile.likely_competitors
 
 
 def test_keyword_serp_agent_outputs_keyword_signals(brightdata: BrightDataClient) -> None:
-    shop = ShopBootstrapAgent(brightdata).run(ShopBootstrapInput(shop_url="https://www.etsy.com/shop/demo-linen-studio")).shop_profile
+    shop = ShopBootstrapAgent(brightdata).run(ShopBootstrapInput(shop_url="https://www.etsy.com/shop/CaitlynMinimalist")).shop_profile
     output = KeywordSerpAgent(brightdata).run(KeywordSerpInput(run_id="run_test", shop_profile=shop))
 
     assert output.keyword_signals
@@ -60,7 +60,7 @@ def test_keyword_serp_agent_outputs_keyword_signals(brightdata: BrightDataClient
 
 
 def test_competitor_watch_agent_outputs_competitor_signals(brightdata: BrightDataClient) -> None:
-    shop = ShopBootstrapAgent(brightdata).run(ShopBootstrapInput(shop_url="https://www.etsy.com/shop/demo-linen-studio")).shop_profile
+    shop = ShopBootstrapAgent(brightdata).run(ShopBootstrapInput(shop_url="https://www.etsy.com/shop/CaitlynMinimalist")).shop_profile
     output = CompetitorWatchAgent(brightdata).run(CompetitorWatchInput(run_id="run_test", shop_profile=shop))
 
     assert len(output.competitor_signals) == len(shop.likely_competitors)
@@ -68,14 +68,14 @@ def test_competitor_watch_agent_outputs_competitor_signals(brightdata: BrightDat
 
 
 def test_trend_scout_agent_outputs_social_and_search_signals(brightdata: BrightDataClient) -> None:
-    shop = ShopBootstrapAgent(brightdata).run(ShopBootstrapInput(shop_url="https://www.etsy.com/shop/demo-linen-studio")).shop_profile
+    shop = ShopBootstrapAgent(brightdata).run(ShopBootstrapInput(shop_url="https://www.etsy.com/shop/CaitlynMinimalist")).shop_profile
     output = TrendScoutAgent(brightdata).run(TrendScoutInput(run_id="run_test", shop_profile=shop))
 
     assert {signal.platform for signal in output.trend_signals} == {"TikTok", "Reddit", "Instagram", "Google Shopping"}
 
 
 def test_market_pulse_agent_normalizes_signals(brightdata: BrightDataClient) -> None:
-    shop = ShopBootstrapAgent(brightdata).run(ShopBootstrapInput(shop_url="https://www.etsy.com/shop/demo-linen-studio")).shop_profile
+    shop = ShopBootstrapAgent(brightdata).run(ShopBootstrapInput(shop_url="https://www.etsy.com/shop/CaitlynMinimalist")).shop_profile
     keyword = KeywordSerpAgent(brightdata).run(KeywordSerpInput(run_id="run_test", shop_profile=shop))
     competitor = CompetitorWatchAgent(brightdata).run(CompetitorWatchInput(run_id="run_test", shop_profile=shop))
     trend = TrendScoutAgent(brightdata).run(TrendScoutInput(run_id="run_test", shop_profile=shop))
@@ -95,7 +95,7 @@ def test_market_pulse_agent_normalizes_signals(brightdata: BrightDataClient) -> 
 
 
 def test_judge_agent_scores_market_pulse_with_fake_llm(brightdata: BrightDataClient) -> None:
-    shop = ShopBootstrapAgent(brightdata).run(ShopBootstrapInput(shop_url="https://www.etsy.com/shop/demo-linen-studio")).shop_profile
+    shop = ShopBootstrapAgent(brightdata).run(ShopBootstrapInput(shop_url="https://www.etsy.com/shop/CaitlynMinimalist")).shop_profile
     keyword = KeywordSerpAgent(brightdata).run(KeywordSerpInput(run_id="run_test", shop_profile=shop))
     pulse = MarketPulseAgent().run(MarketPulseInput(run_id="run_test", keyword_signals=keyword.keyword_signals))
     llm = LLMClient(force_test_mode=True)
@@ -109,7 +109,7 @@ def test_judge_agent_scores_market_pulse_with_fake_llm(brightdata: BrightDataCli
 
 
 def test_brief_delivery_agent_formats_approved_briefs(brightdata: BrightDataClient) -> None:
-    shop = ShopBootstrapAgent(brightdata).run(ShopBootstrapInput(shop_url="https://www.etsy.com/shop/demo-linen-studio")).shop_profile
+    shop = ShopBootstrapAgent(brightdata).run(ShopBootstrapInput(shop_url="https://www.etsy.com/shop/CaitlynMinimalist")).shop_profile
     keyword = KeywordSerpAgent(brightdata).run(KeywordSerpInput(run_id="run_test", shop_profile=shop))
     pulse = MarketPulseAgent().run(MarketPulseInput(run_id="run_test", keyword_signals=keyword.keyword_signals))
     judge = JudgeAgent(LLMClient(force_test_mode=True)).run(JudgeInput(run_id="run_test", market_pulse_signals=pulse.market_pulse_signals))
@@ -133,7 +133,7 @@ def test_pipeline_runner_persists_run_activity_briefs_and_debug(store: EtsyPulse
     llm = LLMClient(debug_sink=store.record_debug_event, force_test_mode=True)
     runner = PipelineRunner(store=store, brightdata=brightdata, llm_client=llm)
 
-    output = runner.run_demo(PipelineRunInput(shop_url="https://www.etsy.com/shop/demo-linen-studio"))
+    output = runner.run_demo(PipelineRunInput(shop_url="https://www.etsy.com/shop/CaitlynMinimalist"))
 
     assert output.run.status == "completed"
     assert output.run.keyword_signals

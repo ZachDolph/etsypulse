@@ -64,3 +64,16 @@ This is intentionally not present in the default example config.
 `backend/app/services/openclaw_adapter.py` exposes a small mapping layer for the backend. It does not import OpenClaw and does not start an OpenClaw gateway. Its job is to document and validate the contract between EtsyPulse pipeline steps and future OpenClaw agent routing.
 
 Future live OpenClaw work should add a separate runtime client behind this adapter, then call the existing `PipelineRunner` only as a fallback or local demo mode.
+
+## Hosted Runtime Evaluation
+
+Do not wire the public dashboard to a local OpenClaw gateway. For the deployed hackathon demo, the credible live path is a backend-managed OpenClaw runtime:
+
+- Deploy FastAPI, Postgres, and the Vercel dashboard first.
+- Add an internal/private OpenClaw service on Render or another host only after the main demo is verified.
+- Keep provider keys on backend/OpenClaw services only; never expose them to Vercel.
+- Apply hosted-demo rate and budget controls around OpenClaw-triggered provider calls.
+- Preserve the deterministic Python pipeline as the local/no-runtime fallback.
+- Require no Discord or channel binding for judges; use local workflow and agent-to-agent routing instead.
+
+Real OpenClaw integration will need a runtime adapter that can submit coordinator tasks, poll or subscribe for agent results, map OpenClaw events into `ActivityEvent` and `DebugEvent` records, and fall back cleanly when OpenClaw is unavailable.

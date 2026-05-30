@@ -1,7 +1,7 @@
-# Demo Linen Studio
+# CaitlynMinimalist
 
-Small-batch linen kitchen textiles with neutral styling, gift-ready bundles, and handmade positioning.
+Popular Etsy jewelry shop known for minimalist personalized necklaces, rings, bracelets, and gift-ready keepsakes.
 
 ## Featured listing
 
-Washed Linen Tea Towel Set - $34.00 USD. Common buyer intent: hostess gift, housewarming gift, neutral kitchen decor.
+Personalized Name Necklace - $32.00 USD. Common buyer intent: personalized gift, name necklace, gift for her, minimalist jewelry.

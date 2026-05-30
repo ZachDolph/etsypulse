@@ -6,6 +6,10 @@
     "backend:dev": "cd backend && uvicorn app.main:app --reload --port 8000",
     "backend:test": "cd backend && PYTHONPATH=. pytest",
     "frontend:dev": "cd frontend && npm run dev",
-    "frontend:build": "cd frontend && npm run build"
+    "frontend:build": "cd frontend && npm run build",
+    "backend:seed": "cd backend && PYTHONPATH=. python scripts/seed_demo_data.py",
+    "backend:validate-env": "cd backend && PYTHONPATH=. python scripts/validate_deployment_env.py",
+    "backend:docker-build": "docker build -t etsypulse-api:local backend",
+    "ci": "npm run backend:test && npm run frontend:build"
   }
 }

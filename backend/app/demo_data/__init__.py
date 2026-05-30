@@ -16,7 +16,7 @@ from app.schemas import (
     TrendSignal,
 )
 
-DEFAULT_SHOP_URL = "https://www.etsy.com/shop/demo-linen-studio"
+DEFAULT_SHOP_URL = "https://www.etsy.com/shop/CaitlynMinimalist"
 AGENTS = [
     "Shop Bootstrap Agent",
     "Keyword & SERP Agent",
@@ -43,40 +43,54 @@ def demo_source(tool: str, url: str | None = None) -> EvidenceSource:
 def build_shop_profile(shop_url: str = DEFAULT_SHOP_URL) -> ShopProfile:
     shop_id = stable_id("shop", shop_url)
     source = demo_source("demo_fixture", shop_url)
+    is_caitlyn = "caitlynminimalist" in shop_url.lower()
+    if is_caitlyn:
+        shop_name = "CaitlynMinimalist"
+        category = "Jewelry / Personalized Gifts"
+        summary = "Popular Etsy jewelry shop known for minimalist personalized necklaces, rings, bracelets, and gift-ready keepsakes."
+        baseline = "High-volume personalized jewelry brand competing on minimalist style, gifting intent, and customization speed."
+        seed_keywords = ["personalized necklace", "name necklace", "minimalist jewelry", "birth flower necklace"]
+        competitors = ["GLDNxLayeredAndLong", "GracePersonalized"]
+        listing_defs = [
+            ("personalized-name-necklace", "Personalized Name Necklace", 32.0, ["personalized necklace", "name necklace", "minimalist jewelry"]),
+            ("birth-flower-necklace", "Birth Flower Necklace", 38.0, ["birth flower necklace", "custom jewelry", "gift for her"]),
+            ("dainty-initial-ring", "Dainty Initial Ring", 28.0, ["initial ring", "personalized jewelry", "minimalist ring"]),
+        ]
+    else:
+        shop_name = "Demo Linen Studio"
+        category = "Home & Living / Kitchen Textiles"
+        summary = "Small-batch linen kitchen goods with giftable price points and neutral styling."
+        baseline = "Premium handmade linen basics competing on natural materials and gift-ready presentation."
+        seed_keywords = ["linen tea towel", "hostess gift", "neutral kitchen decor"]
+        competitors = ["CottageLinenCo", "ModernHearthGoods"]
+        listing_defs = [
+            ("linen-tea-towel", "Washed Linen Tea Towel Set", 34.0, ["linen towel", "hostess gift", "kitchen decor"]),
+            ("market-tote", "Natural Linen Market Tote", 46.0, ["linen tote", "farmers market", "eco gift"]),
+        ]
     listings = [
         Listing(
-            id=stable_id("listing", f"{shop_url}/linen-tea-towel"),
+            id=stable_id("listing", f"{shop_url}/{slug}"),
             shop_id=shop_id,
-            title="Washed Linen Tea Towel Set",
-            url=f"{shop_url}/listing/linen-tea-towel",
-            price=34.0,
-            tags=["linen towel", "hostess gift", "kitchen decor"],
+            title=title,
+            url=f"{shop_url}/listing/{slug}",
+            price=price,
+            tags=tags,
             provenance=[source],
             confidence=0.92,
             timestamp=fixed_time(),
-        ),
-        Listing(
-            id=stable_id("listing", f"{shop_url}/market-tote"),
-            shop_id=shop_id,
-            title="Natural Linen Market Tote",
-            url=f"{shop_url}/listing/market-tote",
-            price=46.0,
-            tags=["linen tote", "farmers market", "eco gift"],
-            provenance=[source],
-            confidence=0.9,
-            timestamp=fixed_time(),
-        ),
+        )
+        for slug, title, price, tags in listing_defs
     ]
     return ShopProfile(
         id=shop_id,
         shop_url=shop_url,
-        shop_name="Demo Linen Studio",
-        category="Home & Living / Kitchen Textiles",
-        summary="Small-batch linen kitchen goods with giftable price points and neutral styling.",
+        shop_name=shop_name,
+        category=category,
+        summary=summary,
         listings=listings,
-        seed_keywords=["linen tea towel", "hostess gift", "neutral kitchen decor"],
-        likely_competitors=["CottageLinenCo", "ModernHearthGoods"],
-        baseline_positioning="Premium handmade linen basics competing on natural materials and gift-ready presentation.",
+        seed_keywords=seed_keywords,
+        likely_competitors=competitors,
+        baseline_positioning=baseline,
         provenance=[source],
         confidence=0.91,
         timestamp=fixed_time(),
@@ -154,15 +168,15 @@ def build_demo_run(shop: ShopProfile) -> tuple[AgentRun, list[ActivityEvent], li
         id=stable_id("brief", judge_score.id),
         run_id=run_id,
         shop_id=shop.id,
-        title="Test a hostess-gift linen towel bundle",
-        summary="Repackage the existing tea towel set as a giftable bundle and update the first photo/copy around hostess and housewarming intent.",
+        title="Test a personalized jewelry gift-positioning refresh",
+        summary="Refresh personalized necklace and birth-flower listings around gift intent, customization confidence, and ready-to-gift presentation.",
         recommended_actions=[
-            "Create a two-pack or three-pack variation using current inventory.",
-            "Add 'hostess gift' and 'housewarming gift' to title/tags where accurate.",
-            "Use the first listing image to show folded towels with simple gift wrapping.",
+            "Create a gift-ready listing variation using existing personalized jewelry inventory.",
+            "Add accurate gift-intent terms such as personalized gift, name necklace, and gift for her.",
+            "Use the first listing image to show personalization options and gift-ready packaging.",
         ],
         evidence=[keyword_signal.opportunity, competitor_signal.signal, trend_signal.signal],
-        why_now="The stubbed signals align around seasonal entertaining and giftable kitchen textiles.",
+        why_now="The cached signals align around personalized jewelry, gifting intent, and high-conversion customization language.",
         confidence=0.84,
         judge_score=judge_score,
         provenance=[source],

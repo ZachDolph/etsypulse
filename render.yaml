@@ -1,0 +1,50 @@
+services:
+  - type: web
+    name: etsypulse-api
+    runtime: docker
+    plan: free
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    healthCheckPath: /ready
+    autoDeployTrigger: checksPass
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: LOG_LEVEL
+        value: INFO
+      - key: DEMO_MODE
+        value: true
+      - key: CORS_ORIGINS
+        sync: false
+      - key: DATABASE_URL
+        fromDatabase:
+          name: etsypulse-db
+          property: connectionString
+      - key: BRIGHTDATA_API_KEY
+        sync: false
+      - key: BRIGHTDATA_UNLOCKER_ZONE
+        sync: false
+      - key: NVIDIA_NIM_API_KEY
+        sync: false
+      - key: NVIDIA_NIM_BASE_URL
+        value: https://integrate.api.nvidia.com/v1
+      - key: NVIDIA_NIM_MODEL
+        sync: false
+      - key: OPENROUTER_API_KEY
+        sync: false
+      - key: OPENROUTER_BASE_URL
+        value: https://openrouter.ai/api/v1
+      - key: OPENROUTER_MODEL_FALLBACK
+        sync: false
+      - key: SCHEDULER_DEMO_ENABLED
+        value: true
+      - key: RATE_LIMIT_ENABLED
+        value: true
+      - key: RATE_LIMIT_PUBLIC_PER_MINUTE
+        value: 120
+      - key: RATE_LIMIT_SHOP_PER_HOUR
+        value: 12
+
+databases:
+  - name: etsypulse-db
+    plan: free

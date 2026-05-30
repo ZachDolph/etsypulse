@@ -33,10 +33,10 @@ def test_demo_mode_methods_make_no_network_calls(monkeypatch) -> None:
     monkeypatch.setattr(socket, "create_connection", fail_network)
     client = BrightDataClient(demo_mode=True)
 
-    assert client.etsy_products(shop_url="https://www.etsy.com/shop/demo-linen-studio")["items"]
+    assert client.etsy_products(shop_url="https://www.etsy.com/shop/CaitlynMinimalist")["items"]
     assert client.serp_batch(["linen tea towel"])["queries"]
-    assert "Demo Linen Studio" in client.scrape_markdown("https://www.etsy.com/shop/demo-linen-studio")
-    assert client.scrape_batch(["https://www.etsy.com/shop/demo-linen-studio"])["pages"]
+    assert "CaitlynMinimalist" in client.scrape_markdown("https://www.etsy.com/shop/CaitlynMinimalist")
+    assert client.scrape_batch(["https://www.etsy.com/shop/CaitlynMinimalist"])["pages"]
     assert client.discover("linen kitchen gifts")["results"]
     assert client.tiktok_posts("linen hostess gift")["posts"]
     assert client.reddit_posts("housewarming kitchen gift")["posts"]
@@ -115,7 +115,7 @@ def test_live_unsupported_brightdata_path_uses_explicit_cache_fallback(monkeypat
     get_settings.cache_clear()
 
     client = BrightDataClient(demo_mode=False)
-    result = client.etsy_products(shop_url="https://www.etsy.com/shop/demo-linen-studio")
+    result = client.etsy_products(shop_url="https://www.etsy.com/shop/CaitlynMinimalist")
 
     assert result["items"]
     event = client.debug_events[0]

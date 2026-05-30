@@ -28,9 +28,9 @@ def clear_settings(monkeypatch):
 
 def test_admin_debug_status_does_not_expose_secrets(monkeypatch) -> None:
     monkeypatch.setenv("DEMO_MODE", "false")
-    monkeypatch.setenv("BRIGHTDATA_API_KEY", "secret-bd")
+    monkeypatch.setenv("BRIGHTDATA_API_KEY", "dummy-bd")
     monkeypatch.setenv("BRIGHTDATA_UNLOCKER_ZONE", "etsy-zone")
-    monkeypatch.setenv("NVIDIA_NIM_API_KEY", "secret-nim")
+    monkeypatch.setenv("NVIDIA_NIM_API_KEY", "dummy-nim")
     monkeypatch.setenv("NVIDIA_NIM_MODEL", "nvidia/test")
     get_settings.cache_clear()
 
@@ -42,7 +42,7 @@ def test_admin_debug_status_does_not_expose_secrets(monkeypatch) -> None:
     assert status.brightdata.configured is True
     assert status.nvidia_nim.configured is True
     dumped = status.model_dump_json()
-    assert "secret" not in dumped
+    assert "dummy" not in dumped
     assert "api_key" not in dumped.lower()
     assert "token" not in dumped.lower()
     assert "credential" in dumped

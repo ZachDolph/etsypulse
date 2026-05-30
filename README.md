@@ -1,5 +1,7 @@
 # EtsyPulse
 
+![EtsyPulse cover](docs/submission/assets/etsypulse-cover.png)
+
 EtsyPulse is an autonomous Etsy market-intelligence dashboard for sellers. A seller enters an Etsy shop URL once, then the system bootstraps a shop profile, monitors keyword/SERP movement, watches competitors, scans social-commerce trends, scores signals with a Judge Agent, and emits only actionable briefs.
 
 The project is built for a hackathon demo: it runs locally in deterministic demo mode without Bright Data, NVIDIA NIM, OpenRouter, OpenClaw, Discord, or other provider onboarding.
@@ -12,7 +14,7 @@ The project is built for a hackathon demo: it runs locally in deterministic demo
 - Cached Bright Data-style fixtures plus a live Bright Data Web Unlocker markdown path with redacted debug events.
 - NVIDIA NIM primary LLM provider and OpenRouter fallback behind a no-live-call test mode.
 - Scheduler service for manual and demo scheduled runs.
-- Per-IP and per-shop rate limiting for public backend actions.
+- Per-IP and per-shop rate limiting for hosted/public backend actions.
 - Duplicate suppression for overlapping scheduled jobs.
 - OpenClaw-oriented docs/config examples without requiring OpenClaw at runtime.
 
@@ -92,12 +94,12 @@ Open `http://localhost:5173`. The dashboard loads backend health, scheduler stat
 
 ## Usage Examples
 
-Bootstrap a shop profile:
+Bootstrap the default cached demo shop:
 
 ```bash
 curl -X POST http://localhost:8000/shops/bootstrap-request \
   -H 'Content-Type: application/json' \
-  -d '{"shop_url":"https://www.etsy.com/shop/demo-linen-studio"}'
+  -d '{"shop_url":"https://www.etsy.com/shop/CaitlynMinimalist"}'
 ```
 
 Run the deterministic demo pipeline:
@@ -149,6 +151,7 @@ Core settings:
 - `DEMO_MODE`: defaults to `true`.
 - `DATABASE_URL`: defaults to local SQLite.
 - `CORS_ORIGINS`: comma-separated frontend origins.
+- `RATE_LIMIT_ENABLED`: defaults to `false` locally and `true` when `APP_ENV=production`; intended for hosted/public judge demos, not required for local personal runs even when `DEMO_MODE=true`.
 - `RATE_LIMIT_PUBLIC_PER_MINUTE`: per-IP public request limit.
 - `RATE_LIMIT_SHOP_PER_HOUR`: per-shop action limit.
 - `SCHEDULER_KEYWORD_INTERVAL_MINUTES`, `SCHEDULER_COMPETITOR_INTERVAL_MINUTES`, `SCHEDULER_TREND_INTERVAL_MINUTES`: autonomous check cadences.
@@ -183,6 +186,7 @@ curl -X POST http://localhost:8000/admin/live-smoke
 
 Demo mode is the safest way to run the project for judging and development:
 
+- The default dashboard demo uses a cached CaitlynMinimalist-style Etsy shop profile so judges see a recognizable Etsy seller scenario immediately.
 - Bright Data calls load cached fixtures from `backend/app/demo_data/brightdata_samples`.
 - LLM judging uses deterministic fake responses in automated tests and demo pipeline runs.
 - Scheduled demo runs execute the same local pipeline and record activity/debug events.
@@ -200,6 +204,40 @@ Validate optional OpenClaw config examples and local pipeline health:
 PYTHONPATH=backend backend/.venv/bin/python backend/scripts/smoke_openclaw_config.py
 ```
 
+## Submission Materials
+
+Hackathon submission copy, market analysis, demo video script, slide outline, Bright Data proof, and judging-criteria mapping are in `docs/submission/`.
+
+- Main package: `docs/submission/submission-package.md`
+- Demo script: `docs/submission/demo-video-script.md`
+- Slide outline: `docs/submission/slide-outline.md`
+- Cover image: `docs/submission/assets/etsypulse-cover.png`
+
+## Production Deployment
+
+EtsyPulse is prepared for a two-service hackathon deployment:
+
+- Frontend: Vercel static React/Vite app, configured by `vercel.json`.
+- Backend: Render Docker web service, configured by `render.yaml` and `backend/Dockerfile`.
+- Database: Render Postgres or another hosted Postgres database via `DATABASE_URL`.
+
+Deployment docs and runbooks live in `docs/deployment.md`. Public judging should keep `DEMO_MODE=true`; provider credentials can still be configured for private `/admin/live-smoke` validation.
+
+Production checks:
+
+```bash
+PYTHONPATH=backend backend/.venv/bin/python backend/scripts/validate_deployment_env.py
+PYTHONPATH=backend backend/.venv/bin/python backend/scripts/seed_demo_data.py
+docker build -t etsypulse-api:local backend
+```
+
+Health endpoints:
+
+```bash
+curl http://localhost:8000/health
+curl http://localhost:8000/ready
+```
+
 ## OpenClaw
 
 OpenClaw is optional for the portable demo. EtsyPulse includes OpenClaw-facing docs and config examples so the agent roster can later be coordinated through local workflow and `agentToAgent` routing.
@@ -207,6 +245,8 @@ OpenClaw is optional for the portable demo. EtsyPulse includes OpenClaw-facing d
 Start here: `docs/openclaw.md`.
 
 The default app path does not require Discord, Slack, WhatsApp, or any chat channel.
+
+For the hosted hackathon demo, the practical sequence is: first verify Vercel + Render + Postgres, then add a hosted OpenClaw service behind the backend once the main dashboard flow is stable. The frontend should never call a developer-local OpenClaw gateway.
 
 ## Development
 
@@ -247,3 +287,4 @@ npm run frontend:build
 
 ## License & Support
 
+Hackathon prototype. Add a repository license before public reuse. For support during evaluation, use the README, `docs/deployment.md`, and the admin/debug endpoints to verify runtime state.

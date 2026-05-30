@@ -11,10 +11,10 @@ class MarketPulseAgent(BaseAgent[MarketPulseInput, MarketPulseOutput]):
         source_ids = [signal.id for signal in agent_input.keyword_signals + agent_input.competitor_signals + agent_input.trend_signals]
         signals = [
             MarketPulseSignal(
-                id=stable_id("pulse", f"{agent_input.run_id}:gift-ready-linen-bundle"),
+                id=stable_id("pulse", f"{agent_input.run_id}:personalized-jewelry-gift-refresh"),
                 run_id=agent_input.run_id,
-                title="Gift-ready linen bundles are a near-term opportunity",
-                summary="Keyword, competitor, and trend signals align around positioning existing linen listings as hostess or housewarming gifts.",
+                title="Personalized jewelry gift intent is a near-term opportunity",
+                summary="Keyword, competitor, and trend signals align around positioning personalized jewelry listings as high-confidence gifts.",
                 severity="medium",
                 novelty=0.7,
                 confidence=0.84,

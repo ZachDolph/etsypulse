@@ -3,30 +3,52 @@
   "mode": "demo_cache",
   "queries": [
     {
-      "keyword": "linen tea towel hostess gift",
+      "keyword": "personalized necklace gift",
       "engine": "google",
       "organic": [
         {
           "rank": 1,
-          "title": "Giftable linen towel sets",
-          "link": "https://example.com/giftable-linen-towels",
-          "description": "Neutral linen towels positioned for housewarming and hostess gifts."
+          "title": "Personalized necklace gifts",
+          "link": "https://example.com/personalized-necklace-gifts",
+          "description": "Searchers compare custom name necklaces and birth flower jewelry for gifts."
         }
       ],
-      "related_searches": ["housewarming kitchen gifts", "linen kitchen towel set"]
+      "related_searches": [
+        "name necklace gift",
+        "custom jewelry for her"
+      ]
     },
     {
-      "keyword": "neutral kitchen decor etsy",
+      "keyword": "birth flower necklace etsy",
+      "engine": "google",
+      "organic": [
+        {
+          "rank": 2,
+          "title": "Birth flower necklaces on Etsy",
+          "link": "https://example.com/birth-flower-necklace",
+          "description": "Buyers look for meaningful minimalist floral jewelry."
+        }
+      ],
+      "related_searches": [
+        "birth month flower necklace",
+        "personalized flower necklace"
+      ]
+    },
+    {
+      "keyword": "minimalist personalized jewelry",
       "engine": "google",
       "organic": [
         {
           "rank": 3,
-          "title": "Neutral kitchen textiles on Etsy",
-          "link": "https://example.com/neutral-kitchen-textiles",
-          "description": "Searchers compare handmade towels, aprons, and tote bundles."
+          "title": "Minimalist personalized jewelry",
+          "link": "https://example.com/minimalist-personalized-jewelry",
+          "description": "Dainty custom jewelry positioned for everyday gifting."
         }
       ],
-      "related_searches": ["farmhouse linen towel", "minimalist kitchen gift"]
+      "related_searches": [
+        "dainty name necklace",
+        "custom initial ring"
+      ]
     }
   ]
 }
