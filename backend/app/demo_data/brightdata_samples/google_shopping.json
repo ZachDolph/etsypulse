@@ -1,21 +1,21 @@
 {
   "source_tool": "web_data_google_shopping",
   "mode": "demo_cache",
-  "query": "linen tea towel set",
+  "query": "personalized name necklace",
   "products": [
     {
-      "title": "Organic Linen Tea Towel Set",
-      "merchant": "Example Home Goods",
-      "price": 38.0,
+      "title": "Personalized Name Necklace",
+      "merchant": "Example Jewelry Seller",
+      "price": 34.0,
       "currency": "USD",
-      "url": "https://example.com/products/organic-linen-tea-towel-set"
+      "url": "https://example.com/products/personalized-name-necklace"
     },
     {
-      "title": "Washed Linen Kitchen Towel Bundle",
-      "merchant": "Example Marketplace Seller",
-      "price": 42.0,
+      "title": "Birth Flower Necklace",
+      "merchant": "Example Gift Shop",
+      "price": 39.0,
       "currency": "USD",
-      "url": "https://example.com/products/washed-linen-kitchen-towel-bundle"
+      "url": "https://example.com/products/birth-flower-necklace"
     }
   ]
 }

@@ -1,14 +1,14 @@
 {
   "source_tool": "web_data_reddit_posts",
   "mode": "demo_cache",
-  "query": "housewarming kitchen gift linen towel",
+  "query": "personalized jewelry gift",
   "posts": [
     {
-      "url": "https://www.reddit.com/r/demo/comments/linen_gift",
-      "subreddit": "BuyItForLifeDemo",
-      "title": "What is a useful housewarming gift under $50?",
+      "url": "https://www.reddit.com/r/demo/comments/personalized_jewelry_gift",
+      "subreddit": "GiftIdeasDemo",
+      "title": "What is a thoughtful personalized gift under $50?",
       "score": 187,
-      "summary": "Reusable kitchen linens appear as a practical gift suggestion."
+      "summary": "Name necklaces and birth flower jewelry appear as practical personalized gift suggestions."
     }
   ]
 }

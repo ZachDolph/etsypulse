@@ -24,7 +24,7 @@ class KeywordSerpAgent(BaseAgent[KeywordSerpInput, KeywordSerpOutput]):
                     id=stable_id("keyword", f"{agent_input.run_id}:{keyword}"),
                     run_id=agent_input.run_id,
                     keyword=keyword,
-                    movement="Demo SERP fixture shows buyer intent around giftable kitchen textiles.",
+                    movement="Demo SERP fixture shows buyer intent around personalized jewelry gifts.",
                     opportunity=f"Refresh listing copy around '{keyword}' and related terms: {', '.join(related[:2])}.",
                     visibility_score=0.78,
                     severity="medium",

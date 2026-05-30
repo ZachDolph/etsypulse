@@ -12,7 +12,7 @@ class TrendScoutAgent(BaseAgent[TrendScoutInput, TrendScoutOutput]):
         self.brightdata = brightdata
 
     def run(self, agent_input: TrendScoutInput) -> TrendScoutOutput:
-        query = agent_input.shop_profile.seed_keywords[0] if agent_input.shop_profile.seed_keywords else "linen kitchen gift"
+        query = agent_input.shop_profile.seed_keywords[0] if agent_input.shop_profile.seed_keywords else "personalized jewelry gift"
         tiktok = self.brightdata.tiktok_posts(query)
         reddit = self.brightdata.reddit_posts(query)
         instagram = self.brightdata.instagram_reels(query)
@@ -24,7 +24,7 @@ class TrendScoutAgent(BaseAgent[TrendScoutInput, TrendScoutOutput]):
                     run_id=agent_input.run_id,
                     platform="TikTok",
                     topic=query,
-                    signal=f"TikTok demo cache has {len(tiktok.get('posts', []))} post(s) around giftable kitchen textiles.",
+                    signal=f"TikTok demo cache has {len(tiktok.get('posts', []))} post(s) around personalized jewelry gift intent.",
                     momentum_score=0.74,
                     severity="medium",
                     provenance=[source("web_data_tiktok_posts")],
@@ -46,7 +46,7 @@ class TrendScoutAgent(BaseAgent[TrendScoutInput, TrendScoutOutput]):
                     run_id=agent_input.run_id,
                     platform="Instagram",
                     topic=query,
-                    signal=f"Instagram reels demo cache has {len(instagram.get('reels', []))} neutral kitchen styling signal(s).",
+                    signal=f"Instagram reels demo cache has {len(instagram.get('reels', []))} personalized jewelry styling signal(s).",
                     momentum_score=0.71,
                     severity="medium",
                     provenance=[source("web_data_instagram_reels")],

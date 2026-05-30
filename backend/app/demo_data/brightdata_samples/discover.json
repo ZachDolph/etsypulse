@@ -1,16 +1,16 @@
 {
   "source_tool": "discover",
   "mode": "demo_cache",
-  "query": "linen kitchen gifts",
+  "query": "personalized jewelry gifts",
   "results": [
     {
-      "url": "https://www.etsy.com/search?q=linen+kitchen+gifts",
-      "title": "Etsy search: linen kitchen gifts",
+      "url": "https://www.etsy.com/search?q=personalized+jewelry+gifts",
+      "title": "Etsy search: personalized jewelry gifts",
       "reason": "Marketplace discovery URL for keyword monitoring."
     },
     {
-      "url": "https://www.google.com/search?q=linen+kitchen+gifts",
-      "title": "Google search: linen kitchen gifts",
+      "url": "https://www.google.com/search?q=personalized+jewelry+gifts",
+      "title": "Google search: personalized jewelry gifts",
       "reason": "SERP discovery URL for broader buyer intent."
     }
   ]

@@ -1,14 +1,14 @@
 {
   "source_tool": "web_data_instagram_reels",
   "mode": "demo_cache",
-  "query": "neutral kitchen linen",
+  "query": "minimalist personalized jewelry",
   "reels": [
     {
-      "url": "https://www.instagram.com/reel/demo-linen-1001/",
-      "caption": "Neutral kitchen reset with natural linen textures",
+      "url": "https://www.instagram.com/reel/demo-jewelry-1001/",
+      "caption": "Layered minimalist name necklaces for everyday gifting",
       "plays": 58200,
       "likes": 3100,
-      "hashtags": ["neutralhome", "kitchentextiles", "linenlove"]
+      "hashtags": ["minimalistjewelry", "namenecklace", "giftforher"]
     }
   ]
 }

@@ -14,7 +14,7 @@ class CompetitorWatchAgent(BaseAgent[CompetitorWatchInput, CompetitorWatchOutput
     def run(self, agent_input: CompetitorWatchInput) -> CompetitorWatchOutput:
         competitor_urls = [f"https://www.etsy.com/shop/{name}" for name in agent_input.shop_profile.likely_competitors]
         self.brightdata.scrape_batch(competitor_urls)
-        products = self.brightdata.etsy_products(search_url="https://www.etsy.com/search?q=linen+tea+towel")
+        products = self.brightdata.etsy_products(search_url="https://www.etsy.com/search?q=personalized+necklace")
         item_count = len(products.get("items", [])) if isinstance(products, dict) else 0
         signals = [
             CompetitorSignal(
@@ -22,7 +22,7 @@ class CompetitorWatchAgent(BaseAgent[CompetitorWatchInput, CompetitorWatchOutput
                 run_id=agent_input.run_id,
                 competitor_name=name,
                 competitor_url=f"https://www.etsy.com/shop/{name}",
-                signal=f"{name} is positioned near {item_count} comparable linen listings in demo cache; gift bundle positioning is visible.",
+                signal=f"{name} is positioned near {item_count} comparable personalized jewelry listings in demo cache; gift-ready positioning is visible.",
                 price_delta_percent=-8.0 if index == 0 else 4.0,
                 severity="medium",
                 provenance=[source("scrape_as_markdown", f"https://www.etsy.com/shop/{name}"), source("web_data_etsy_products")],

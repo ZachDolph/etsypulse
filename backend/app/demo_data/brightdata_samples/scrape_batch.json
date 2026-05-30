@@ -3,14 +3,14 @@
   "mode": "demo_cache",
   "pages": [
     {
-      "url": "https://www.etsy.com/shop/demo-linen-studio",
+      "url": "https://www.etsy.com/shop/CaitlynMinimalist",
       "markdown_file": "scrape_markdown.md",
-      "summary": "Shop page emphasizes linen kitchen textiles and giftable bundles."
+      "summary": "Shop page emphasizes personalized minimalist jewelry and gift-ready keepsakes."
     },
     {
-      "url": "https://www.etsy.com/shop/CottageLinenCo",
-      "markdown": "# CottageLinenCo\nCompetitor positions similar linen towels as housewarming bundles.",
-      "summary": "Competitor bundle positioning overlaps with Demo Linen Studio."
+      "url": "https://www.etsy.com/shop/GLDNxLayeredAndLong",
+      "markdown": "# GLDNxLayeredAndLong\nCompetitor positions layered personalized jewelry as gift-ready keepsakes.",
+      "summary": "Competitor gift positioning overlaps with CaitlynMinimalist."
     }
   ]
 }
