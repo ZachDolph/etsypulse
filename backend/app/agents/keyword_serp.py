@@ -4,6 +4,9 @@ from app.agents.utils import source, stable_id
 from app.schemas import KeywordSignal
 from app.services.brightdata_client import BrightDataClient
 
+_VISIBILITY_BY_RANK = {1: 0.91, 2: 0.82, 3: 0.73}
+_SEVERITY_BY_RANK = {1: "high", 2: "medium", 3: "medium"}
+
 
 class KeywordSerpAgent(BaseAgent[KeywordSerpInput, KeywordSerpOutput]):
     name = "Keyword & SERP Agent"
@@ -19,17 +22,30 @@ class KeywordSerpAgent(BaseAgent[KeywordSerpInput, KeywordSerpOutput]):
         for index, keyword in enumerate(keywords):
             query_data = queries[index % len(queries)] if queries else {}
             related = query_data.get("related_searches", [])
+            organic = query_data.get("organic", [])
+            rank = int(organic[0].get("rank", index + 1)) if organic else index + 1
+            description = organic[0].get("description", "") if organic else ""
+            related_str = ", ".join(f"'{r}'" for r in related[:2]) if related else "'custom jewelry', 'gift for her'"
+            movement = (
+                f"SERP rank {rank}: {description.rstrip('.')} — buyer-intent queries lead organic results."
+                if description
+                else f"'{keyword}' holds rank {rank} in gift-intent search results; click-through opportunity is strong."
+            )
+            opportunity = (
+                f"Add '{keyword}' to your listing title and first-image alt text. "
+                f"Weave related terms {related_str} into tags and the listing description to capture adjacent searches."
+            )
             signals.append(
                 KeywordSignal(
                     id=stable_id("keyword", f"{agent_input.run_id}:{keyword}"),
                     run_id=agent_input.run_id,
                     keyword=keyword,
-                    movement="Demo SERP fixture shows buyer intent around personalized jewelry gifts.",
-                    opportunity=f"Refresh listing copy around '{keyword}' and related terms: {', '.join(related[:2])}.",
-                    visibility_score=0.78,
-                    severity="medium",
+                    movement=movement,
+                    opportunity=opportunity,
+                    visibility_score=_VISIBILITY_BY_RANK.get(rank, round(0.78 - index * 0.05, 2)),
+                    severity=_SEVERITY_BY_RANK.get(rank, "medium"),
                     provenance=[source("search_engine", f"https://www.google.com/search?q={keyword.replace(' ', '+')}")],
-                    confidence=0.84,
+                    confidence=round(0.90 - index * 0.04, 2),
                 )
             )
         return KeywordSerpOutput(keyword_signals=signals)

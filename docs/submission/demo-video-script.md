@@ -59,7 +59,7 @@ Visuals:
 
 Narration:
 
-"The key product decision is that EtsyPulse does not flood the seller with raw analytics. The Judge Agent is the gatekeeper. This brief recommends testing a gift-ready linen bundle this week, explains why now, shows supporting evidence, and breaks down the Judge score. The seller gets a concrete action, not another research dashboard."
+"The key product decision is that EtsyPulse does not flood the seller with raw analytics. The Judge Agent is the gatekeeper. This brief recommends testing a personalized jewelry gift refresh this week, explains why now, shows supporting evidence, and breaks down the Judge score. The seller gets a concrete action, not another research dashboard."
 
 Visuals:
 

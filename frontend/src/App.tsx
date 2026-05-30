@@ -1,4 +1,4 @@
-import { FormEvent, useCallback, useEffect, useMemo, useState } from 'react';
+import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import {
   bootstrapShop,
@@ -23,6 +23,8 @@ import {
 import './styles.css';
 
 const DEMO_SHOP_URL = 'https://www.etsy.com/shop/CaitlynMinimalist';
+const WAKEUP_MAX_RETRIES = 10;
+const WAKEUP_INTERVAL_MS = 7000;
 
 type DashboardData = {
   health: HealthResponse | null;
@@ -52,6 +54,18 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [running, setRunning] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [wakeupAttempt, setWakeupAttempt] = useState(0);
+  const [wakeupCountdown, setWakeupCountdown] = useState<number | null>(null);
+  const hasConnectedRef = useRef(false);
+  const wakeupTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const countdownTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const clearWakeupTimers = () => {
+    if (wakeupTimerRef.current) clearTimeout(wakeupTimerRef.current);
+    if (countdownTimerRef.current) clearInterval(countdownTimerRef.current);
+    wakeupTimerRef.current = null;
+    countdownTimerRef.current = null;
+  };
 
   const refreshDashboard = useCallback(async () => {
     const [health, scheduler, briefs, activity, debugEvents, adminStatus] = await Promise.all([
@@ -72,18 +86,66 @@ function App() {
       shop = await getShop(newestBrief.shop_id);
     }
 
+    hasConnectedRef.current = true;
+    clearWakeupTimers();
+    setWakeupAttempt(0);
+    setWakeupCountdown(null);
+    setError(null);
     setData({ health, scheduler, shop, run, briefs, activity, debugEvents, adminStatus });
   }, []);
 
+  const scheduleWakeupRetry = useCallback(
+    (attempt: number, retryFn: () => void) => {
+      if (attempt >= WAKEUP_MAX_RETRIES) return;
+      let remaining = Math.round(WAKEUP_INTERVAL_MS / 1000);
+      setWakeupCountdown(remaining);
+      countdownTimerRef.current = setInterval(() => {
+        remaining -= 1;
+        setWakeupCountdown(remaining > 0 ? remaining : null);
+        if (remaining <= 0 && countdownTimerRef.current) {
+          clearInterval(countdownTimerRef.current);
+          countdownTimerRef.current = null;
+        }
+      }, 1000);
+      wakeupTimerRef.current = setTimeout(retryFn, WAKEUP_INTERVAL_MS);
+    },
+    [],
+  );
+
   useEffect(() => {
-    refreshDashboard()
-      .catch((err: unknown) => setError(readError(err)))
-      .finally(() => setLoading(false));
+    let attempt = 0;
+
+    function tryConnect() {
+      refreshDashboard()
+        .catch((err: unknown) => {
+          if (hasConnectedRef.current) {
+            setError(readError(err));
+            return;
+          }
+          attempt += 1;
+          setWakeupAttempt(attempt);
+          if (attempt < WAKEUP_MAX_RETRIES) {
+            scheduleWakeupRetry(attempt, tryConnect);
+          } else {
+            setError(readError(err));
+          }
+        })
+        .finally(() => setLoading(false));
+    }
+
+    tryConnect();
+
     const interval = window.setInterval(() => {
-      refreshDashboard().catch((err: unknown) => setError(readError(err)));
+      if (hasConnectedRef.current) {
+        refreshDashboard().catch(() => {});
+      }
     }, 15000);
-    return () => window.clearInterval(interval);
-  }, [refreshDashboard]);
+
+    return () => {
+      window.clearInterval(interval);
+      clearWakeupTimers();
+    };
+  }, [refreshDashboard, scheduleWakeupRetry]);
 
   async function handleSetup(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -155,8 +217,11 @@ function App() {
         </div>
       </section>
 
-      {error && <StatusNotice tone="error" title="Dashboard needs attention" message={error} />}
-      {loading && <StatusNotice tone="neutral" title="Loading intelligence workspace" message="Fetching health, scheduler status, briefs, activity, and debug events from FastAPI." />}
+      {wakeupAttempt > 0 && !error && (
+        <WakeupNotice attempt={wakeupAttempt} maxAttempts={WAKEUP_MAX_RETRIES} countdown={wakeupCountdown} />
+      )}
+      {error && !wakeupAttempt && <BackendErrorNotice message={error} onRetry={() => { window.location.reload(); }} />}
+      {loading && wakeupAttempt === 0 && <StatusNotice tone="neutral" title="Loading intelligence workspace" message="Fetching health, scheduler status, briefs, activity, and debug events from FastAPI." />}
 
       <section className="setup-grid reveal delay-one">
         <form className="setup-card" onSubmit={handleSetup}>
@@ -185,6 +250,8 @@ function App() {
         ))}
       </section>
 
+      <WorkflowRibbon />
+
       <section className="dashboard-grid reveal delay-three">
         <div className="main-column">
           <BriefsPanel briefs={data.briefs} latestBrief={latestBrief} />
@@ -200,6 +267,27 @@ function App() {
   );
 }
 
+function WorkflowRibbon() {
+  const steps = [
+    { label: 'Shop URL', detail: 'bootstrap profile', tone: 'source' },
+    { label: 'Bright Data', detail: 'collect web signals', tone: 'data' },
+    { label: 'Agents', detail: 'normalize market pulse', tone: 'agent' },
+    { label: 'Judge', detail: 'filter for actionability', tone: 'judge' },
+    { label: 'Brief', detail: 'ship seller action', tone: 'brief' },
+  ];
+  return (
+    <section className="workflow-ribbon reveal delay-two" aria-label="EtsyPulse workflow">
+      {steps.map((step, index) => (
+        <article className={`workflow-step ${step.tone}`} key={step.label}>
+          <span>{String(index + 1).padStart(2, '0')}</span>
+          <strong>{step.label}</strong>
+          <p>{step.detail}</p>
+        </article>
+      ))}
+    </section>
+  );
+}
+
 function DemoBanner({ health, loading }: { health: HealthResponse | null; loading: boolean }) {
   if (loading) return <div className="demo-banner muted-banner">Checking demo mode</div>;
   return <div className="demo-banner">{health?.demo_mode ? 'Demo mode: no credentials required' : 'Live mode enabled'}</div>;
@@ -210,6 +298,42 @@ function StatusNotice({ tone, title, message }: { tone: 'neutral' | 'error'; tit
     <section className={`notice ${tone}`} role={tone === 'error' ? 'alert' : 'status'}>
       <strong>{title}</strong>
       <span>{message}</span>
+    </section>
+  );
+}
+
+function WakeupNotice({ attempt, maxAttempts, countdown }: { attempt: number; maxAttempts: number; countdown: number | null }) {
+  const apiUrl = (import.meta.env.VITE_API_BASE_URL as string | undefined) ?? `${window.location.protocol}//${window.location.hostname}:8000`;
+  return (
+    <section className="notice wakeup" role="status" aria-live="polite">
+      <div className="wakeup-row">
+        <span className="wakeup-spinner" aria-hidden="true" />
+        <strong>Backend is starting up — this takes up to 60 seconds on first load.</strong>
+      </div>
+      <span>
+        Connecting to <code>{apiUrl}</code> · attempt {attempt}/{maxAttempts}
+        {countdown !== null ? ` · retrying in ${countdown}s` : ' · retrying…'}
+      </span>
+    </section>
+  );
+}
+
+function BackendErrorNotice({ message, onRetry }: { message: string; onRetry: () => void }) {
+  const apiUrl = (import.meta.env.VITE_API_BASE_URL as string | undefined) ?? `${window.location.protocol}//${window.location.hostname}:8000`;
+  return (
+    <section className="notice error" role="alert">
+      <strong>Cannot reach the EtsyPulse backend</strong>
+      <span>
+        Tried <code>{apiUrl}</code> — {message}.
+        The hosted backend may be offline.
+      </span>
+      <div className="notice-actions">
+        <button className="retry-btn" onClick={onRetry}>Retry</button>
+        <span className="notice-hint">
+          To run locally: <code>uvicorn app.main:app --port 8000</code> then set{' '}
+          <code>VITE_API_BASE_URL=http://localhost:8000</code>
+        </span>
+      </div>
     </section>
   );
 }
@@ -263,7 +387,7 @@ function BriefsPanel({ briefs, latestBrief }: { briefs: Brief[]; latestBrief: Br
         <article className="brief-card" key={brief.id}>
           <div className="brief-topline">
             <span className="decision">{brief.judge_score.decision}</span>
-            <span>{percent(brief.judge_score.total_score)} total Judge score</span>
+            <span className="judge-badge">Judge Agent · {percent(brief.judge_score.total_score)} total</span>
           </div>
           <h3>{brief.title}</h3>
           <p>{brief.summary}</p>
@@ -340,6 +464,7 @@ function SignalColumn({ title, items }: { title: string; items: Array<{ title: s
 }
 
 function ActivityFeed({ activity, run }: { activity: ActivityEvent[]; run: AgentRun | null }) {
+  const agentNames = run?.agents ?? [];
   return (
     <section className="panel compact-panel">
       <div className="panel-heading">
@@ -350,6 +475,13 @@ function ActivityFeed({ activity, run }: { activity: ActivityEvent[]; run: Agent
         <span className="pill">{run?.status ?? 'idle'}</span>
       </div>
       {activity.length === 0 && <EmptyPanel title="No activity yet" message="Agent milestones will stream here after setup." />}
+      {agentNames.length > 0 && (
+        <div className="agent-strip" aria-label="Agent roster">
+          {agentNames.map((agent) => (
+            <span key={agent}>{agent.replace(' Agent', '')}</span>
+          ))}
+        </div>
+      )}
       <div className="timeline">
         {activity.slice(0, 10).map((event) => (
           <article key={event.id}>
@@ -395,6 +527,7 @@ function ProviderStatusPanel({ adminStatus }: { adminStatus: AdminDebugStatus | 
 }
 
 function DebugPanel({ debugEvents, brightDataCount, llmCount }: { debugEvents: DebugEvent[]; brightDataCount: number; llmCount: number }) {
+  const brightDataEvents = debugEvents.filter((event) => event.provider.toLowerCase().includes('bright'));
   return (
     <section className="panel compact-panel debug-panel">
       <div className="panel-heading">
@@ -405,6 +538,12 @@ function DebugPanel({ debugEvents, brightDataCount, llmCount }: { debugEvents: D
         <span className="pill">{brightDataCount} Bright Data · {llmCount} LLM</span>
       </div>
       {debugEvents.length === 0 && <EmptyPanel title="No debug events" message="Bright Data fixture loads and fake LLM scoring calls will appear here with redacted request shapes." />}
+      {brightDataEvents.length > 0 && (
+        <div className="brightdata-proof">
+          <strong>Bright Data proof</strong>
+          <p>{brightDataEvents.length} tool call traces · cache/live mode · latency · redacted requests</p>
+        </div>
+      )}
       <div className="debug-list">
         {debugEvents.slice(0, 8).map((event) => (
           <article key={event.id}>

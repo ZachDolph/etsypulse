@@ -38,3 +38,11 @@ htmlcov/
 data/
 backend/data/
 .vercel
+
+# Generated media intermediates
+docs/submission/video/captures/
+docs/submission/video/remotion-preview.png
+docs/submission/video/voiceover-chunk-*.mp3
+docs/submission/video/voiceover-chunk-*.wav
+docs/submission/video/voiceover-edge-*.mp3
+docs/submission/video/voiceover-concat.txt

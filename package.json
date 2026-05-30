@@ -11,5 +11,14 @@
     "backend:validate-env": "cd backend && PYTHONPATH=. python scripts/validate_deployment_env.py",
     "backend:docker-build": "docker build -t etsypulse-api:local backend",
     "ci": "npm run backend:test && npm run frontend:build"
+  },
+  "devDependencies": {
+    "@remotion/cli": "^4.0.469",
+    "@remotion/media": "^4.0.469",
+    "remotion": "^4.0.469"
+  },
+  "dependencies": {
+    "react": "^19.2.6",
+    "react-dom": "^19.2.6"
   }
 }

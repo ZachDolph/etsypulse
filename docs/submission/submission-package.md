@@ -181,6 +181,6 @@ Most seller tools provide dashboards, keyword tables, or listing audits. EtsyPul
 ## Source Notes
 
 - Hackathon page: https://lablab.ai/ai-hackathons/brightdata-ai-agents-web-data-hackathon
-- Submission guide: `codex_docs/HackathonSubmissionGuidelines.md`
+- Submission guide: [LabLabAI Hackathon Submission Guidelines](https://lablab.ai/ai-hackathons/brightdata-ai-agents-web-data-hackathon)
 - Etsy FY2025 results and seller/services metrics: https://investors.etsy.com/news-events/press-releases/detail/218/etsy-inc-reports-fourth-quarter-and-full-year-2025-results
 - Etsy FY2025 Form 10-K reference: https://www.sec.gov/Archives/edgar/data/0001370637/000137063726000019/etsy-20251231.htm

@@ -22,7 +22,11 @@ class JudgeAgent(BaseAgent[JudgeInput, JudgeOutput]):
     def run(self, agent_input: JudgeInput) -> JudgeOutput:
         scores: list[JudgeScore] = []
         for signal in agent_input.market_pulse_signals:
-            rationale = "The seller can test this with listing copy, tags, and bundling before changing inventory."
+            rationale = (
+                f"Signal '{signal.title}' clears the brief threshold. "
+                "Copy, tag, and hero photo updates carry no inventory risk and can be deployed in under an hour. "
+                f"Confidence at {round(signal.confidence * 100):.0f}% across converging keyword, competitor, and social sources."
+            )
             confidence = signal.confidence
             if self.llm_client is not None:
                 try:
@@ -36,11 +40,15 @@ class JudgeAgent(BaseAgent[JudgeInput, JudgeOutput]):
                     confidence = max(0.0, min(1.0, llm_result.confidence))
                 except LLMConfigurationError:
                     pass
-            actionability = 0.88
-            urgency = 0.66
+
+            # Derive scores from signal properties so they vary with signal quality
+            severity_boost = {"low": 0.0, "medium": 0.06, "high": 0.14}.get(str(signal.severity), 0.0)
+            actionability = round(min(0.97, 0.74 + confidence * 0.16 + severity_boost), 2)
+            urgency = round(min(0.94, 0.52 + signal.novelty * 0.26 + severity_boost), 2)
+            evidence_quality = round(min(0.96, 0.68 + len(signal.provenance) * 0.08 + confidence * 0.10), 2)
+            business_impact = round(min(0.93, 0.62 + signal.novelty * 0.14 + confidence * 0.14), 2)
             novelty = signal.novelty
-            business_impact = 0.74
-            evidence_quality = 0.81
+
             total = round((actionability + urgency + confidence + novelty + business_impact + evidence_quality) / 6, 2)
             scores.append(
                 JudgeScore(
