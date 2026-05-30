@@ -23,8 +23,8 @@ import {
 import './styles.css';
 
 const DEMO_SHOP_URL = 'https://www.etsy.com/shop/CaitlynMinimalist';
-const WAKEUP_MAX_RETRIES = 10;
-const WAKEUP_INTERVAL_MS = 7000;
+const WAKEUP_MAX_RETRIES = 20;   // 20 × 8s = 160s — covers Render's worst cold starts
+const WAKEUP_INTERVAL_MS = 8000;
 
 type DashboardData = {
   health: HealthResponse | null;
@@ -153,6 +153,11 @@ function App() {
   }
 
   async function runDemo(url: string) {
+    // If we've never connected, reload to restart the wakeup sequence instead of failing silently
+    if (!hasConnectedRef.current) {
+      window.location.reload();
+      return;
+    }
     setRunning(true);
     setError(null);
     try {
@@ -193,10 +198,13 @@ function App() {
 
       <section className="hero-panel reveal">
         <div className="hero-copy">
-          <p className="eyebrow">EtsyPulse autonomous market desk</p>
+          <div className="wordmark">
+            <span className="wordmark-badge">EP</span>
+            <span className="wordmark-text">EtsyPulse</span>
+          </div>
           <h1>Set the shop once. Agents watch the market. Only useful briefs land.</h1>
           <p className="lede">
-            EtsyPulse turns cached Bright Data-style market evidence and deterministic agent scoring into a seller cockpit: shop context, live agent activity, market pulse signals, Judge scores, and actionable recommendations.
+            Your competitors just changed their pricing. A TikTok trend is driving searches in your niche. Your SERP rank shifted overnight. Seven agents monitor all of it — keyword, competitor, and social signals — then a Judge Agent filters for what's actually worth acting on. You get a brief, not a dashboard.
           </p>
           <div className="hero-actions">
             <button className="primary-action" disabled={running} onClick={() => runDemo(DEMO_SHOP_URL)}>
@@ -220,8 +228,14 @@ function App() {
       {wakeupAttempt > 0 && !error && (
         <WakeupNotice attempt={wakeupAttempt} maxAttempts={WAKEUP_MAX_RETRIES} countdown={wakeupCountdown} />
       )}
-      {error && !wakeupAttempt && <BackendErrorNotice message={error} onRetry={() => { window.location.reload(); }} />}
-      {loading && wakeupAttempt === 0 && <StatusNotice tone="neutral" title="Loading intelligence workspace" message="Fetching health, scheduler status, briefs, activity, and debug events from FastAPI." />}
+      {error && (
+        <BackendErrorNotice
+          message={error}
+          timedOut={wakeupAttempt >= WAKEUP_MAX_RETRIES}
+          onRetry={() => window.location.reload()}
+        />
+      )}
+      {loading && wakeupAttempt === 0 && !error && <StatusNotice tone="neutral" title="Loading intelligence workspace" message="Fetching health, scheduler status, briefs, activity, and debug events from FastAPI." />}
 
       <section className="setup-grid reveal delay-one">
         <form className="setup-card" onSubmit={handleSetup}>
@@ -318,17 +332,19 @@ function WakeupNotice({ attempt, maxAttempts, countdown }: { attempt: number; ma
   );
 }
 
-function BackendErrorNotice({ message, onRetry }: { message: string; onRetry: () => void }) {
+function BackendErrorNotice({ message, timedOut, onRetry }: { message: string; timedOut: boolean; onRetry: () => void }) {
   const apiUrl = (import.meta.env.VITE_API_BASE_URL as string | undefined) ?? `${window.location.protocol}//${window.location.hostname}:8000`;
   return (
     <section className="notice error" role="alert">
-      <strong>Cannot reach the EtsyPulse backend</strong>
+      <strong>{timedOut ? 'Backend is taking longer than expected to start.' : 'Cannot reach the EtsyPulse backend.'}</strong>
       <span>
-        Tried <code>{apiUrl}</code> — {message}.
-        The hosted backend may be offline.
+        {timedOut
+          ? 'The Render free-tier backend may need up to 90 seconds on a cold start. Click retry to try again — it usually connects on the second attempt.'
+          : <>Tried <code>{apiUrl}</code> — {message}. The hosted backend may be offline.</>
+        }
       </span>
       <div className="notice-actions">
-        <button className="retry-btn" onClick={onRetry}>Retry</button>
+        <button className="retry-btn" onClick={onRetry}>{timedOut ? 'Try again' : 'Retry'}</button>
         <span className="notice-hint">
           To run locally: <code>uvicorn app.main:app --port 8000</code> then set{' '}
           <code>VITE_API_BASE_URL=http://localhost:8000</code>
@@ -360,11 +376,19 @@ function ShopCard({ shop }: { shop: ShopProfile | null }) {
       </div>
       <div className="mini-list">
         <strong>Seed keywords</strong>
-        <p>{shop.seed_keywords.join(' · ')}</p>
+        <div className="competitor-pills">
+          {shop.seed_keywords.map((kw) => (
+            <span key={kw} className="competitor-pill">{kw}</span>
+          ))}
+        </div>
       </div>
       <div className="mini-list">
         <strong>Competitors</strong>
-        <p>{shop.likely_competitors.join(' · ')}</p>
+        <div className="competitor-pills">
+          {shop.likely_competitors.map((name) => (
+            <span key={name} className="competitor-pill">{name}</span>
+          ))}
+        </div>
       </div>
     </article>
   );
@@ -470,7 +494,7 @@ function ActivityFeed({ activity, run }: { activity: ActivityEvent[]; run: Agent
       <div className="panel-heading">
         <div>
           <p className="section-kicker">Live activity</p>
-          <h2>Agent run states</h2>
+          <h2>Agent activity</h2>
         </div>
         <span className="pill">{run?.status ?? 'idle'}</span>
       </div>
